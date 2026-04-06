@@ -3,13 +3,27 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Adaptive Math API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: students
+    description: Student profile and abilities
+  - name: topics
+    description: Topics and knowledge graph
+  - name: diagnostic
+    description: Diagnostic assessment
+  - name: practice
+    description: Practice sessions and adaptive learning
+  - name: tutor
+    description: AI tutor Stella
+  - name: review
+    description: Spaced repetition review schedule
+  - name: dashboard
+    description: Dashboard summaries and analytics
 paths:
   /healthz:
     get:
@@ -24,6 +38,353 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /students/me:
+    get:
+      operationId: getStudentProfile
+      tags: [students]
+      summary: Get current student profile
+      responses:
+        "200":
+          description: Student profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentProfile"
+
+  /students/me/abilities:
+    get:
+      operationId: getStudentAbilities
+      tags: [students]
+      summary: Get student ability scores per topic
+      responses:
+        "200":
+          description: Student abilities map
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentAbility"
+
+  /students/me/misconceptions:
+    get:
+      operationId: getStudentMisconceptions
+      tags: [students]
+      summary: Get active misconceptions for the student
+      responses:
+        "200":
+          description: List of active misconceptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentMisconception"
+
+  /topics:
+    get:
+      operationId: getTopics
+      tags: [topics]
+      summary: Get all topics with prerequisite graph
+      parameters:
+        - name: grade
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Topics list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Topic"
+
+  /topics/{topicId}:
+    get:
+      operationId: getTopic
+      tags: [topics]
+      summary: Get a single topic
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Topic details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+
+  /diagnostic/start:
+    post:
+      operationId: startDiagnostic
+      tags: [diagnostic]
+      summary: Start a diagnostic assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartDiagnosticBody"
+      responses:
+        "200":
+          description: Diagnostic session with first question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticSession"
+
+  /diagnostic/{sessionId}/answer:
+    post:
+      operationId: submitDiagnosticAnswer
+      tags: [diagnostic]
+      summary: Submit answer during diagnostic
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitAnswerBody"
+      responses:
+        "200":
+          description: Updated session with next question or completion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticSession"
+
+  /diagnostic/{sessionId}/results:
+    get:
+      operationId: getDiagnosticResults
+      tags: [diagnostic]
+      summary: Get diagnostic assessment results and ability map
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Diagnostic results with cognitive report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticResults"
+
+  /learning-path:
+    get:
+      operationId: getLearningPath
+      tags: [practice]
+      summary: Get personalized learning path (bundles)
+      responses:
+        "200":
+          description: Ordered list of learning bundles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LearningBundle"
+
+  /practice/next-question:
+    get:
+      operationId: getNextQuestion
+      tags: [practice]
+      summary: Get next adaptive question for current topic
+      parameters:
+        - name: topicId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [DIAGNOSTIC, CALIBRATION, MASTERY, REVIEW]
+      responses:
+        "200":
+          description: Next question with metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PracticeQuestion"
+
+  /practice/answer:
+    post:
+      operationId: submitPracticeAnswer
+      tags: [practice]
+      summary: Submit answer for a practice question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PracticeAnswerBody"
+      responses:
+        "200":
+          description: Answer result with misconception detection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PracticeAnswerResult"
+
+  /practice/session-stats:
+    get:
+      operationId: getPracticeSessionStats
+      tags: [practice]
+      summary: Get current practice session statistics
+      parameters:
+        - name: topicId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session stats including streak, accuracy, state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PracticeSessionStats"
+
+  /tutor/hint:
+    post:
+      operationId: getTutorHint
+      tags: [tutor]
+      summary: Get a Socratic hint from Stella for a question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TutorHintBody"
+      responses:
+        "200":
+          description: Socratic hint from Stella
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TutorHintResponse"
+
+  /tutor/chat:
+    post:
+      operationId: sendTutorMessage
+      tags: [tutor]
+      summary: Send a message to Stella AI tutor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TutorChatBody"
+      responses:
+        "200":
+          description: Stella's response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TutorChatResponse"
+
+  /review/schedule:
+    get:
+      operationId: getReviewSchedule
+      tags: [review]
+      summary: Get spaced repetition review schedule
+      responses:
+        "200":
+          description: Review schedule with due items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewSchedule"
+
+  /review/answer:
+    post:
+      operationId: submitReviewAnswer
+      tags: [review]
+      summary: Submit answer for a review item (updates SM-2 schedule)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewAnswerBody"
+      responses:
+        "200":
+          description: Updated review item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewItem"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary for student
+      responses:
+        "200":
+          description: Dashboard summary with stats, streak, and progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent learning activity feed
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/knowledge-map:
+    get:
+      operationId: getKnowledgeMap
+      tags: [dashboard]
+      summary: Get student knowledge map grid with mastery percentages
+      responses:
+        "200":
+          description: Knowledge map data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeMap"
+
+  /dashboard/cognitive-report:
+    get:
+      operationId: getCognitiveReport
+      tags: [dashboard]
+      summary: Get cognitive diagnostic report with skill indices
+      responses:
+        "200":
+          description: Cognitive report data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CognitiveReport"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +395,711 @@ components:
       required:
         - status
 
+    StudentProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        grade:
+          type: integer
+        avatar:
+          type: string
+        streakDays:
+          type: integer
+        totalXp:
+          type: integer
+        level:
+          type: integer
+        joinedAt:
+          type: string
+      required:
+        - id
+        - name
+        - grade
+        - streakDays
+        - totalXp
+        - level
+        - joinedAt
+
+    StudentAbility:
+      type: object
+      properties:
+        topicId:
+          type: string
+        topicName:
+          type: string
+        theta:
+          type: number
+          description: IRT ability score (-3 to +3)
+        masteryPercent:
+          type: integer
+        state:
+          type: string
+          enum: [NOT_STARTED, DIAGNOSTIC, CALIBRATION, MASTERY, REVIEW]
+        lastPracticedAt:
+          type: string
+          nullable: true
+      required:
+        - topicId
+        - topicName
+        - theta
+        - masteryPercent
+        - state
+
+    StudentMisconception:
+      type: object
+      properties:
+        id:
+          type: string
+        topicId:
+          type: string
+        topicName:
+          type: string
+        errorTag:
+          type: string
+        description:
+          type: string
+        occurrences:
+          type: integer
+        isResolved:
+          type: boolean
+        detectedAt:
+          type: string
+      required:
+        - id
+        - topicId
+        - topicName
+        - errorTag
+        - description
+        - occurrences
+        - isResolved
+        - detectedAt
+
+    Topic:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        grade:
+          type: integer
+        category:
+          type: string
+        prerequisites:
+          type: array
+          items:
+            type: string
+          description: List of prerequisite topic IDs
+        difficulty:
+          type: number
+      required:
+        - id
+        - name
+        - grade
+        - category
+        - prerequisites
+        - difficulty
+
+    Question:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        latex:
+          type: string
+          nullable: true
+          description: LaTeX representation of the question
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionOption"
+        topicId:
+          type: string
+        difficulty:
+          type: number
+        difficultyLabel:
+          type: string
+          enum: [EASY, NORMAL, HARD, VERY_HARD]
+      required:
+        - id
+        - text
+        - options
+        - topicId
+        - difficulty
+        - difficultyLabel
+
+    QuestionOption:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        latex:
+          type: string
+          nullable: true
+        isCorrect:
+          type: boolean
+        misconceptionTag:
+          type: string
+          nullable: true
+          description: Error tag if this option represents a common misconception
+      required:
+        - id
+        - text
+        - isCorrect
+
+    StartDiagnosticBody:
+      type: object
+      properties:
+        grade:
+          type: integer
+      required:
+        - grade
+
+    DiagnosticSession:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        currentQuestion:
+          $ref: "#/components/schemas/Question"
+          nullable: true
+        questionIndex:
+          type: integer
+        totalQuestions:
+          type: integer
+        isComplete:
+          type: boolean
+        topicsAssessed:
+          type: array
+          items:
+            type: string
+      required:
+        - sessionId
+        - questionIndex
+        - totalQuestions
+        - isComplete
+        - topicsAssessed
+
+    SubmitAnswerBody:
+      type: object
+      properties:
+        questionId:
+          type: string
+        selectedOptionId:
+          type: string
+        responseTimeMs:
+          type: integer
+      required:
+        - questionId
+        - selectedOptionId
+        - responseTimeMs
+
+    DiagnosticResults:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        abilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentAbility"
+        weakTopics:
+          type: array
+          items:
+            type: string
+        strongTopics:
+          type: array
+          items:
+            type: string
+        cognitiveReport:
+          $ref: "#/components/schemas/CognitiveReport"
+      required:
+        - sessionId
+        - abilities
+        - weakTopics
+        - strongTopics
+        - cognitiveReport
+
+    LearningBundle:
+      type: object
+      properties:
+        id:
+          type: string
+        topicId:
+          type: string
+        topicName:
+          type: string
+        difficultyLevel:
+          type: string
+          enum: [NORMAL, HARD, VERY_HARD]
+        status:
+          type: string
+          enum: [CURRENT, LOCKED, COMPLETED]
+        estimatedMinutes:
+          type: integer
+        masteryRequired:
+          type: integer
+        prerequisites:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - topicId
+        - topicName
+        - difficultyLevel
+        - status
+        - estimatedMinutes
+        - masteryRequired
+        - prerequisites
+
+    PracticeQuestion:
+      type: object
+      properties:
+        question:
+          $ref: "#/components/schemas/Question"
+        learningState:
+          type: string
+          enum: [DIAGNOSTIC, CALIBRATION, MASTERY, REVIEW]
+        targetProbability:
+          type: number
+          description: Target success probability (0-1), aim for 0.75
+        sessionProgress:
+          type: integer
+          description: Questions answered in this session
+        hintAvailable:
+          type: boolean
+      required:
+        - question
+        - learningState
+        - targetProbability
+        - sessionProgress
+        - hintAvailable
+
+    PracticeAnswerBody:
+      type: object
+      properties:
+        questionId:
+          type: string
+        selectedOptionId:
+          type: string
+        topicId:
+          type: string
+        responseTimeMs:
+          type: integer
+      required:
+        - questionId
+        - selectedOptionId
+        - topicId
+        - responseTimeMs
+
+    PracticeAnswerResult:
+      type: object
+      properties:
+        isCorrect:
+          type: boolean
+        correctOptionId:
+          type: string
+        explanation:
+          type: string
+        misconception:
+          $ref: "#/components/schemas/StudentMisconception"
+          nullable: true
+        updatedTheta:
+          type: number
+        supplementaryRound:
+          type: boolean
+          description: True if misconception detected and supplementary questions will be inserted
+        newLearningState:
+          type: string
+          enum: [DIAGNOSTIC, CALIBRATION, MASTERY, REVIEW]
+          nullable: true
+        masteryAchieved:
+          type: boolean
+      required:
+        - isCorrect
+        - correctOptionId
+        - explanation
+        - updatedTheta
+        - supplementaryRound
+        - masteryAchieved
+
+    PracticeSessionStats:
+      type: object
+      properties:
+        topicId:
+          type: string
+        learningState:
+          type: string
+          enum: [DIAGNOSTIC, CALIBRATION, MASTERY, REVIEW]
+        questionsAnswered:
+          type: integer
+        correctCount:
+          type: integer
+        accuracyPercent:
+          type: integer
+        currentTheta:
+          type: number
+        recentStreak:
+          type: integer
+        veryHardCorrect:
+          type: integer
+        openMisconceptions:
+          type: integer
+        timeSpentMinutes:
+          type: number
+      required:
+        - topicId
+        - learningState
+        - questionsAnswered
+        - correctCount
+        - accuracyPercent
+        - currentTheta
+        - recentStreak
+        - veryHardCorrect
+        - openMisconceptions
+        - timeSpentMinutes
+
+    TutorHintBody:
+      type: object
+      properties:
+        questionId:
+          type: string
+        hintLevel:
+          type: integer
+          minimum: 1
+          maximum: 4
+          description: "1=concept, 2=steps, 3=check understanding, 4=full solution"
+        studentAnswer:
+          type: string
+          nullable: true
+      required:
+        - questionId
+        - hintLevel
+
+    TutorHintResponse:
+      type: object
+      properties:
+        hintLevel:
+          type: integer
+        message:
+          type: string
+        socraticType:
+          type: string
+          enum: [CLARIFICATION, ASSUMPTIONS, EVIDENCE, IMPLICATIONS, PERSPECTIVES]
+          nullable: true
+        followUpQuestion:
+          type: string
+          nullable: true
+      required:
+        - hintLevel
+        - message
+
+    TutorChatBody:
+      type: object
+      properties:
+        message:
+          type: string
+        questionId:
+          type: string
+          nullable: true
+        topicId:
+          type: string
+          nullable: true
+        conversationHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+      required:
+        - message
+        - conversationHistory
+
+    TutorChatResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        socraticType:
+          type: string
+          nullable: true
+        suggestedNextStep:
+          type: string
+          nullable: true
+        relatedTopicIds:
+          type: array
+          items:
+            type: string
+      required:
+        - message
+        - relatedTopicIds
+
+    ChatMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - role
+        - content
+        - timestamp
+
+    ReviewSchedule:
+      type: object
+      properties:
+        dueTodayCount:
+          type: integer
+        upcomingCount:
+          type: integer
+        dueItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewItem"
+        upcomingItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewItem"
+      required:
+        - dueTodayCount
+        - upcomingCount
+        - dueItems
+        - upcomingItems
+
+    ReviewItem:
+      type: object
+      properties:
+        id:
+          type: string
+        topicId:
+          type: string
+        topicName:
+          type: string
+        dueDate:
+          type: string
+        interval:
+          type: integer
+          description: Current SM-2 interval in days
+        repetitions:
+          type: integer
+        easeFactor:
+          type: number
+          description: SM-2 ease factor (>=1.3)
+        status:
+          type: string
+          enum: [DUE, UPCOMING, COMPLETED]
+      required:
+        - id
+        - topicId
+        - topicName
+        - dueDate
+        - interval
+        - repetitions
+        - easeFactor
+        - status
+
+    ReviewAnswerBody:
+      type: object
+      properties:
+        reviewItemId:
+          type: string
+        questionId:
+          type: string
+        selectedOptionId:
+          type: string
+        responseTimeMs:
+          type: integer
+        qualityScore:
+          type: integer
+          minimum: 0
+          maximum: 5
+          description: SM-2 quality score (0-5)
+      required:
+        - reviewItemId
+        - questionId
+        - selectedOptionId
+        - responseTimeMs
+        - qualityScore
+
+    DashboardSummary:
+      type: object
+      properties:
+        student:
+          $ref: "#/components/schemas/StudentProfile"
+        todayGoalMinutes:
+          type: integer
+        todayProgressMinutes:
+          type: integer
+        reviewDueCount:
+          type: integer
+        currentTopicId:
+          type: string
+          nullable: true
+        currentTopicName:
+          type: string
+          nullable: true
+        currentTopicState:
+          type: string
+          nullable: true
+        overallMasteryPercent:
+          type: integer
+        topicsCompleted:
+          type: integer
+        topicsTotal:
+          type: integer
+        weeklyXp:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyXp"
+      required:
+        - student
+        - todayGoalMinutes
+        - todayProgressMinutes
+        - reviewDueCount
+        - overallMasteryPercent
+        - topicsCompleted
+        - topicsTotal
+        - weeklyXp
+
+    DailyXp:
+      type: object
+      properties:
+        day:
+          type: string
+        xp:
+          type: integer
+      required:
+        - day
+        - xp
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [MASTERY_ACHIEVED, TOPIC_STARTED, REVIEW_COMPLETED, MISCONCEPTION_FIXED, STREAK_MILESTONE, LEVEL_UP]
+        topicId:
+          type: string
+          nullable: true
+        topicName:
+          type: string
+          nullable: true
+        description:
+          type: string
+        xpEarned:
+          type: integer
+        timestamp:
+          type: string
+      required:
+        - id
+        - type
+        - description
+        - xpEarned
+        - timestamp
+
+    KnowledgeMap:
+      type: object
+      properties:
+        grade:
+          type: integer
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeCategory"
+        overallMastery:
+          type: integer
+      required:
+        - grade
+        - categories
+        - overallMastery
+
+    KnowledgeCategory:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeTopicCell"
+      required:
+        - id
+        - name
+        - topics
+
+    KnowledgeTopicCell:
+      type: object
+      properties:
+        topicId:
+          type: string
+        topicName:
+          type: string
+        masteryPercent:
+          type: integer
+        state:
+          type: string
+          enum: [NOT_STARTED, DIAGNOSTIC, CALIBRATION, MASTERY, REVIEW]
+        theta:
+          type: number
+      required:
+        - topicId
+        - topicName
+        - masteryPercent
+        - state
+        - theta
+
+    CognitiveReport:
+      type: object
+      properties:
+        responseTimeAvgMs:
+          type: integer
+        confidenceLevel:
+          type: number
+          description: 0-100 score
+        patternRecognition:
+          type: number
+          description: 0-100 score
+        conceptualUnderstanding:
+          type: number
+          description: 0-100 score
+        adaptabilityScore:
+          type: number
+          description: 0-100 score
+        persistenceIndex:
+          type: number
+          description: 0-100 score
+        totalQuestionsAnswered:
+          type: integer
+        accuracyOverall:
+          type: number
+          description: 0-100 percent
+        topMisconceptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentMisconception"
+      required:
+        - responseTimeAvgMs
+        - confidenceLevel
+        - patternRecognition
+        - conceptualUnderstanding
+        - adaptabilityScore
+        - persistenceIndex
+        - totalQuestionsAnswered
+        - accuracyOverall
+        - topMisconceptions
