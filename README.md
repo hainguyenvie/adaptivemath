@@ -50,33 +50,27 @@ cd adaptivemath
 pnpm install
 ```
 
-### 3. Build các thư viện dùng chung
+### 3. Chạy Backend (API Server)
 
-```bash
-pnpm --filter @workspace/api-spec run build
-pnpm --filter @workspace/api-zod run build
-pnpm --filter @workspace/api-client-react run build
-```
-
-### 4. Chạy Backend (API Server)
-
-Mở terminal thứ nhất:
+Mở **terminal thứ nhất**:
 ```bash
 pnpm --filter @workspace/api-server run dev
 ```
 
 API sẽ chạy tại: `http://localhost:3001`
 
-### 5. Chạy Frontend (Adaptive Math)
+### 4. Chạy Frontend
 
-Mở terminal thứ hai:
+Mở **terminal thứ hai**:
 ```bash
 pnpm --filter @workspace/adaptive-math run dev
 ```
 
 Ứng dụng sẽ chạy tại: `http://localhost:5173`
 
-Mở trình duyệt và truy cập `http://localhost:5173` để xem ứng dụng.
+Mở trình duyệt và vào `http://localhost:5173` là xong.
+
+> **Lưu ý:** Vite tự động chuyển tiếp các request `/api/*` sang backend ở cổng 3001 — không cần cấu hình thêm.
 
 ## Cấu trúc dự án
 
