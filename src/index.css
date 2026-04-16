@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family:
+      'Inter',
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-800;
+  }
+}
+
+@layer components {
+  .card-base {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  /* Data table rendered from \begin{tabular}...\end{tabular} */
+  .kntt-table {
+    @apply my-3 inline-block max-w-full border-collapse overflow-x-auto text-sm text-slate-800;
+  }
+  .kntt-td {
+    @apply border border-slate-300 px-2 py-1 text-left align-middle;
+    word-break: break-word;
+    min-width: 2rem;
+  }
+
+  /* Placeholder pill for TikZ figures the renderer can't draw yet */
+  .kntt-tikz-pill {
+    @apply mx-1 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700;
+  }
+
+  /* Pre-rendered TikZ SVG */
+  .kntt-tikz-img {
+    @apply my-3 inline-block max-w-full rounded-lg border border-slate-200 bg-white p-2 shadow-sm;
+    max-height: 320px;
+  }
+
+  /* Lists produced by convertListsToHtml */
+  .kntt-list {
+    @apply my-2 ml-6 list-outside space-y-1;
+  }
+  .kntt-list li {
+    @apply pl-1;
+  }
+  ul.kntt-list {
+    @apply list-disc;
+  }
+  ol.kntt-list {
+    @apply list-decimal;
+  }
+  ol.kntt-list[type='a'] {
+    list-style-type: lower-alpha;
+  }
+  ol.kntt-list[type='A'] {
+    list-style-type: upper-alpha;
+  }
+  ol.kntt-list[type='i'] {
+    list-style-type: lower-roman;
+  }
+  ol.kntt-list[type='I'] {
+    list-style-type: upper-roman;
+  }
+}

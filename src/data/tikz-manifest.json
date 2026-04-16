@@ -1,0 +1,546 @@
+{
+  "builtAt": "2026-04-12T00:37:44.256Z",
+  "totalJobs": 188,
+  "rendered": {
+    "003ff79582cf": {
+      "bytes": 40194
+    },
+    "02e2e8ce2fea": {
+      "bytes": 4123340
+    },
+    "04d7226953eb": {
+      "bytes": 691
+    },
+    "054c62cc52ca": {
+      "bytes": 20697
+    },
+    "060abc72de61": {
+      "bytes": 76851
+    },
+    "071dcb2d177a": {
+      "bytes": 15792
+    },
+    "082a5719a358": {
+      "bytes": 23346
+    },
+    "09d638b092a1": {
+      "bytes": 1109821
+    },
+    "0c36bff92435": {
+      "bytes": 2238349
+    },
+    "0e106b0124fc": {
+      "bytes": 13687
+    },
+    "10b124922f3a": {
+      "bytes": 34242
+    },
+    "10df839bf537": {
+      "bytes": 3932750
+    },
+    "1270f626dc24": {
+      "bytes": 1765739
+    },
+    "1417f1c12e4c": {
+      "bytes": 32023
+    },
+    "149ff3c315b7": {
+      "bytes": 9790
+    },
+    "16d564866579": {
+      "bytes": 10486
+    },
+    "16d7ddbb7941": {
+      "bytes": 5841
+    },
+    "173820b993a0": {
+      "bytes": 5948
+    },
+    "18115c8869b6": {
+      "bytes": 49264
+    },
+    "18cef304183d": {
+      "bytes": 18878
+    },
+    "1acd16b1d02b": {
+      "bytes": 29574
+    },
+    "1ad38082bd52": {
+      "bytes": 8631
+    },
+    "1f6c4a7ccb27": {
+      "bytes": 9484
+    },
+    "1fb648f18b64": {
+      "bytes": 3786948
+    },
+    "227fb238db75": {
+      "bytes": 7956
+    },
+    "29b79bf2a638": {
+      "bytes": 2912860
+    },
+    "2a0a65bdc198": {
+      "bytes": 33550
+    },
+    "2a4ed495c071": {
+      "bytes": 13540
+    },
+    "2b2138fe9a2f": {
+      "bytes": 8608
+    },
+    "2c1dc1d9d582": {
+      "bytes": 14843
+    },
+    "2d4231439868": {
+      "bytes": 1362360
+    },
+    "2dc4c0acb3ef": {
+      "bytes": 11423
+    },
+    "2eb52b8a0ae4": {
+      "bytes": 898695
+    },
+    "2f2e947979a9": {
+      "bytes": 10907
+    },
+    "2fcc8b47c338": {
+      "bytes": 1390422
+    },
+    "31df849ac704": {
+      "bytes": 21088
+    },
+    "3221178c8957": {
+      "bytes": 18712
+    },
+    "32273ff928c1": {
+      "bytes": 6260
+    },
+    "329db9044e37": {
+      "bytes": 717538
+    },
+    "33faec019201": {
+      "bytes": 1798
+    },
+    "34dc3c691103": {
+      "bytes": 9220
+    },
+    "37e4e740d3dd": {
+      "bytes": 9414
+    },
+    "37fe914b7848": {
+      "bytes": 13264
+    },
+    "3c92b5f35644": {
+      "bytes": 11882
+    },
+    "3d4476dfa803": {
+      "bytes": 181397
+    },
+    "42d00bf89d20": {
+      "bytes": 11985
+    },
+    "42dd0bc8f81d": {
+      "bytes": 33615
+    },
+    "4356c1b932c3": {
+      "bytes": 21509
+    },
+    "438122ad368c": {
+      "bytes": 9152
+    },
+    "43d8843db12d": {
+      "bytes": 33863
+    },
+    "444d75a660ab": {
+      "bytes": 21072
+    },
+    "46025afed6d7": {
+      "bytes": 4359864
+    },
+    "47f95f3edfbf": {
+      "bytes": 22239
+    },
+    "480ddf10e2ad": {
+      "bytes": 38197
+    },
+    "485a94c71a5b": {
+      "bytes": 2400
+    },
+    "48afb3760f0d": {
+      "bytes": 10508
+    },
+    "49950247de9c": {
+      "bytes": 12444
+    },
+    "4b54c76a3b78": {
+      "bytes": 14895
+    },
+    "521262473885": {
+      "bytes": 7982
+    },
+    "53a95d5a7d04": {
+      "bytes": 17786
+    },
+    "5546c4d6e569": {
+      "bytes": 14445
+    },
+    "558fec1a019d": {
+      "bytes": 18717
+    },
+    "563b49a982b1": {
+      "bytes": 25988
+    },
+    "58a3b0cca36f": {
+      "bytes": 585834
+    },
+    "58dab02cee17": {
+      "bytes": 38405
+    },
+    "5ca3c0082466": {
+      "bytes": 8748
+    },
+    "5ce15e5eb919": {
+      "bytes": 13732
+    },
+    "5d1137ffe96f": {
+      "bytes": 1042341
+    },
+    "5d469e764384": {
+      "bytes": 11891
+    },
+    "5e2a1beb2577": {
+      "bytes": 10209
+    },
+    "5e85590e919f": {
+      "bytes": 28635
+    },
+    "60884f8bb622": {
+      "bytes": 13315
+    },
+    "613207ba88f7": {
+      "bytes": 21702
+    },
+    "61c6f09e93aa": {
+      "bytes": 18289
+    },
+    "620c51dd716f": {
+      "bytes": 48464
+    },
+    "6214a654cc91": {
+      "bytes": 13708
+    },
+    "68317fc67186": {
+      "bytes": 15589
+    },
+    "6898eb4b234a": {
+      "bytes": 49408
+    },
+    "6c955c60010e": {
+      "bytes": 10107
+    },
+    "6f01ecf97bf7": {
+      "bytes": 61396
+    },
+    "72b0af354da3": {
+      "bytes": 1670831
+    },
+    "73bd5f2c3d9b": {
+      "bytes": 47087
+    },
+    "747b1598dc30": {
+      "bytes": 8100
+    },
+    "75dfe1aee0f7": {
+      "bytes": 1228534
+    },
+    "76732fc05129": {
+      "bytes": 43215
+    },
+    "77b0493736d3": {
+      "bytes": 14089
+    },
+    "797b52eabbae": {
+      "bytes": 33239
+    },
+    "7afc39c955cb": {
+      "bytes": 38106
+    },
+    "7cb06eea950f": {
+      "bytes": 4576
+    },
+    "7fb81f544033": {
+      "bytes": 7151
+    },
+    "7fc3c3bec81c": {
+      "bytes": 8945
+    },
+    "807e0d666869": {
+      "bytes": 23366
+    },
+    "831683d957e3": {
+      "bytes": 24584
+    },
+    "85c2ab970b2b": {
+      "bytes": 16766
+    },
+    "866612fb9ea3": {
+      "bytes": 8271
+    },
+    "873e35d4565b": {
+      "bytes": 37075
+    },
+    "89dc788d309d": {
+      "bytes": 1732837
+    },
+    "8c6d4300ae51": {
+      "bytes": 14035
+    },
+    "8e0e75162b78": {
+      "bytes": 8472
+    },
+    "9244e9cbdcad": {
+      "bytes": 27611
+    },
+    "93b2274b053a": {
+      "bytes": 300576
+    },
+    "956f1d388f56": {
+      "bytes": 7039
+    },
+    "960564850cef": {
+      "bytes": 13708
+    },
+    "97a2d7db9657": {
+      "bytes": 10582
+    },
+    "99088da0c452": {
+      "bytes": 21033
+    },
+    "9911f7bfca5e": {
+      "bytes": 18159
+    },
+    "9986534b83e3": {
+      "bytes": 1578505
+    },
+    "9c9b5914e35c": {
+      "bytes": 16364
+    },
+    "9cfc2cf1a37b": {
+      "bytes": 35825
+    },
+    "9e3cfcb08423": {
+      "bytes": 181407
+    },
+    "a193d7be364f": {
+      "bytes": 1123442
+    },
+    "a3e0074640c3": {
+      "bytes": 18784
+    },
+    "a51a33da6050": {
+      "bytes": 6393
+    },
+    "a70ff7bb6f11": {
+      "bytes": 10720
+    },
+    "a74efd7db85f": {
+      "bytes": 59321
+    },
+    "a7bbf82047a2": {
+      "bytes": 7984
+    },
+    "a944c6a90bf3": {
+      "bytes": 13180
+    },
+    "a9b9c2ae5427": {
+      "bytes": 11553
+    },
+    "aac84e48cede": {
+      "bytes": 11912
+    },
+    "aba2ab0e261d": {
+      "bytes": 27647
+    },
+    "acc352c47aeb": {
+      "bytes": 14547
+    },
+    "b17988c9f86b": {
+      "bytes": 24744
+    },
+    "b3904bfb574b": {
+      "bytes": 25740
+    },
+    "b50dc96e2392": {
+      "bytes": 25988
+    },
+    "b76589c7c6a4": {
+      "bytes": 1930240
+    },
+    "bf4682de1fef": {
+      "bytes": 12496
+    },
+    "c0577e7a4ed5": {
+      "bytes": 4605
+    },
+    "c058ac4b070a": {
+      "bytes": 1005033
+    },
+    "c0c2f1622816": {
+      "bytes": 716271
+    },
+    "c2902dc940a3": {
+      "bytes": 11768
+    },
+    "c67c1551d893": {
+      "bytes": 9744
+    },
+    "c78a0679cf34": {
+      "bytes": 9490
+    },
+    "c7fdce2bd361": {
+      "bytes": 693742
+    },
+    "c88d6df495ed": {
+      "bytes": 1090968
+    },
+    "cbde60a67078": {
+      "bytes": 86230
+    },
+    "cbfe27ecbb40": {
+      "bytes": 56863
+    },
+    "cd2c6618d6df": {
+      "bytes": 50939
+    },
+    "cd41395ad744": {
+      "bytes": 5966
+    },
+    "cd8748a50d79": {
+      "bytes": 19376
+    },
+    "cdab6d603682": {
+      "bytes": 9362
+    },
+    "d231ad41116a": {
+      "bytes": 42357
+    },
+    "d6957d5c675a": {
+      "bytes": 11718
+    },
+    "d6d701153cd3": {
+      "bytes": 11045
+    },
+    "d826a8f75b02": {
+      "bytes": 23010
+    },
+    "dae4953fc2a1": {
+      "bytes": 974
+    },
+    "db45a8b42559": {
+      "bytes": 1129696
+    },
+    "dc8f363a65ea": {
+      "bytes": 23994
+    },
+    "ddca28c6eb2f": {
+      "bytes": 1755024
+    },
+    "de43675bffff": {
+      "bytes": 23626
+    },
+    "dfa7c02ba43a": {
+      "bytes": 12134
+    },
+    "dff6fd4b5666": {
+      "bytes": 19430
+    },
+    "dffa4cb7308e": {
+      "bytes": 5678
+    },
+    "e80253c5cecc": {
+      "bytes": 294156
+    },
+    "e9ec3f8303d6": {
+      "bytes": 4061266
+    },
+    "eb9232f12983": {
+      "bytes": 19492
+    },
+    "ebf7500fbe72": {
+      "bytes": 15115
+    },
+    "ec22182722f3": {
+      "bytes": 6705
+    },
+    "eca541b7466b": {
+      "bytes": 21363
+    },
+    "ed7bc65b8fae": {
+      "bytes": 15976
+    },
+    "edd7f4e18f58": {
+      "bytes": 12036
+    },
+    "ee356890f21f": {
+      "bytes": 819929
+    },
+    "eef48999cdb0": {
+      "bytes": 86651
+    },
+    "f19e2e090c9e": {
+      "bytes": 5073
+    },
+    "f4fcc1111d24": {
+      "bytes": 44372
+    },
+    "f5526ea30ca5": {
+      "bytes": 10966
+    },
+    "f5666b185bfb": {
+      "bytes": 86240
+    },
+    "f623c87b5337": {
+      "bytes": 13019
+    },
+    "f70e2bcc1570": {
+      "bytes": 980
+    },
+    "f71a1c4aec22": {
+      "bytes": 85819
+    },
+    "f95755544ac1": {
+      "bytes": 86651
+    },
+    "fd98b46ae33d": {
+      "bytes": 417117
+    },
+    "fdc3efc90894": {
+      "bytes": 10604
+    },
+    "ff12f7367387": {
+      "bytes": 12967
+    },
+    "ff900a6ef919": {
+      "bytes": 11814
+    },
+    "941ee62da005": {
+      "bytes": 12631
+    }
+  },
+  "failures": {
+    "ee1a73f97094": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-ee1a73f97094\" \"/tmp/kntt-tikz-ee1a73f97094/fig.tex\"",
+    "27de0e56c777": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-27de0e56c777\" \"/tmp/kntt-tikz-27de0e56c777/fig.tex\"",
+    "98d96c309e51": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-98d96c309e51\" \"/tmp/kntt-tikz-98d96c309e51/fig.tex\"",
+    "6ebde7532fe9": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-6ebde7532fe9\" \"/tmp/kntt-tikz-6ebde7532fe9/fig.tex\"",
+    "b3408a95b435": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-b3408a95b435\" \"/tmp/kntt-tikz-b3408a95b435/fig.tex\"",
+    "bdf7e84e40c7": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-bdf7e84e40c7\" \"/tmp/kntt-tikz-bdf7e84e40c7/fig.tex\"",
+    "7633b6d3da27": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-7633b6d3da27\" \"/tmp/kntt-tikz-7633b6d3da27/fig.tex\"",
+    "4c54639040b0": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-4c54639040b0\" \"/tmp/kntt-tikz-4c54639040b0/fig.tex\"",
+    "2b00466e32cc": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-2b00466e32cc\" \"/tmp/kntt-tikz-2b00466e32cc/fig.tex\"",
+    "fe5f95a05db3": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-fe5f95a05db3\" \"/tmp/kntt-tikz-fe5f95a05db3/fig.tex\"",
+    "cc94558117ea": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-cc94558117ea\" \"/tmp/kntt-tikz-cc94558117ea/fig.tex\"",
+    "19fcde56dd49": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-19fcde56dd49\" \"/tmp/kntt-tikz-19fcde56dd49/fig.tex\"",
+    "d03adb551586": "Command failed: lualatex -interaction=nonstopmode -halt-on-error -output-directory=\"/tmp/kntt-tikz-d03adb551586\" \"/tmp/kntt-tikz-d03adb551586/fig.tex\""
+  }
+}
