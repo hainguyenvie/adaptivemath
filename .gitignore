@@ -26,3 +26,9 @@ public/tikz/
 *.njsproj
 *.sln
 *.sw?
+
+# Replit-specific
+.local/
+attached_assets/
+.replit
+replit.nix

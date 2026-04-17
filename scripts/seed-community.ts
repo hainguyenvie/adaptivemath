@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
-  'https://yueqnoxfyagyxmkcutvo.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1ZXFub3hmeWFneXhta2N1dHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNTU1NzMsImV4cCI6MjA5MTkzMTU3M30._5oA5vBsoX1pagEHjT7xxnyfmTTh6bQLT6jGVgOCybk'
+  process.env.VITE_SUPABASE_URL!,
+  process.env.VITE_SUPABASE_ANON_KEY!
 )
 
 const samples = [
