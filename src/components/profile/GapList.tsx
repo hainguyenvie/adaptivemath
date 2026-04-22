@@ -17,68 +17,62 @@ interface GapListProps {
 export function GapList({ gaps, target }: GapListProps) {
   if (gaps.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800">
+      <div className="rounded-2xl border border-dashed border-[#95d3ba] bg-[#f4fff9] p-5 text-sm font-bold text-[#003527]">
         🎉 Không có lỗ hổng đáng kể — mọi chủ đề đều trên mức mục tiêu{' '}
         <strong>{target.toFixed(2)}</strong>.
       </div>
     )
   }
 
-  // Normalize bar width to the largest gap in the list so the visual
-  // dominance matches relative severity (not absolute).
   const maxGap = gaps.reduce((m, g) => Math.max(m, g.gap), 0.0001)
+  const visible = gaps
+  const remaining = 0
 
   return (
     <ol className="space-y-2">
-      {gaps.map((g, i) => {
+      {visible.map((g, i) => {
         const barPct = (g.gap / maxGap) * 100
         return (
           <li
             key={g.topicId}
-            className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"
+            className="flex items-center gap-3 rounded-2xl border border-[#cdeedd] bg-[#f4fff9] px-4 py-3"
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#064e3b] text-xs font-black text-white">
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="truncate font-medium text-slate-800">
+                <span className="truncate text-sm font-bold text-[#003527]">
                   {g.title}
                 </span>
                 {g.weakBonus > 1 && (
                   <span
-                    className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
+                    className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black text-amber-800"
                     title="Bạn tự đánh dấu đây là chủ đề yếu khi onboarding"
                   >
-                    ⭐ tự nhận yếu
+                    ⭐ yếu
                   </span>
                 )}
               </div>
-              <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#cdeedd]">
                 <div
-                  className={cn(
-                    'h-full rounded-full',
-                    g.gap > 0.3
-                      ? 'bg-rose-500'
-                      : g.gap > 0.2
-                        ? 'bg-orange-500'
-                        : 'bg-amber-500',
-                  )}
+                  className="h-full rounded-full bg-gradient-to-r from-[#fb7185] to-[#fb923c]"
                   style={{ width: `${barPct}%` }}
                 />
               </div>
             </div>
-            <div className="shrink-0 text-right text-xs tabular-nums text-slate-500">
-              <div className="font-semibold text-slate-800">
-                gap {g.gap.toFixed(2)}
-              </div>
-              <div>
-                {g.mastery.toFixed(2)} → {g.target.toFixed(2)}
-              </div>
+            <div className="shrink-0 text-right text-[10px] tabular-nums text-[#9fb3aa]">
+              <div className="font-black text-[#003527]">gap {g.gap.toFixed(2)}</div>
+              <div>{g.mastery.toFixed(2)} → {g.target.toFixed(2)}</div>
             </div>
           </li>
         )
       })}
+      {remaining > 0 && (
+        <li className="pt-1 text-center text-[10px] font-bold text-[#9fb3aa]">
+          +{remaining} điểm yếu khác
+        </li>
+      )}
     </ol>
   )
 }

@@ -24,50 +24,52 @@ export function ErrorSignalsCard({ signals }: ErrorSignalsCardProps) {
   const speedDetail = `Trung bình dùng ${(signals.speedProfile.avgRatio * 100).toFixed(0)}% thời gian cho phép mỗi câu`
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <SignalTile
-        icon="⚡"
-        title="Vội vàng"
-        tone={signals.careless.count > 3 ? 'warn' : 'neutral'}
-        bigText={String(signals.careless.count)}
-        smallText={
-          signals.careless.count === 0
-            ? 'Không có dấu hiệu vội vàng'
-            : `câu trả lời sai trong < 30% thời gian`
-        }
-      />
-
-      <SignalTile
-        icon="📚"
-        title="Lỗ hổng nền"
-        tone={signals.conceptGap.count > 3 ? 'bad' : 'neutral'}
-        bigText={String(signals.conceptGap.count)}
-        smallText={
-          signals.conceptGap.count === 0
-            ? 'Vững ở mức Nhận biết'
-            : `câu mức Nhận biết sai`
-        }
-      />
-
-      <SignalTile
-        icon="💪"
-        title="Ứng dụng yếu"
-        tone={signals.applicationWeak.topicIds.length > 0 ? 'warn' : 'neutral'}
-        bigText={String(signals.applicationWeak.topicIds.length)}
-        smallText={
-          signals.applicationWeak.topicIds.length === 0
-            ? 'Áp dụng tốt kiến thức đã hiểu'
-            : describeWeakTopics(signals.applicationWeak.topicIds)
-        }
-      />
-
-      <SignalTile
-        icon={speedIcon(signals.speedProfile.kind)}
-        title="Tốc độ"
-        tone="neutral"
-        bigText={speedLabel[signals.speedProfile.kind]}
-        smallText={speedDetail}
-      />
+    <div className="rounded-[32px] bg-gradient-to-br from-[#064e3b] to-[#003527] p-6 shadow-[0_18px_55px_rgba(0,53,39,0.14)]">
+      <p className="mb-4 text-xs font-black uppercase tracking-[0.18em] text-[#b2f746]">
+        ⚡ Tín hiệu lỗi phát hiện
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <SignalTile
+          icon="💨"
+          title="Bất cẩn"
+          tone={signals.careless.count > 3 ? 'warn' : 'neutral'}
+          bigText={String(signals.careless.count)}
+          smallText={
+            signals.careless.count === 0
+              ? 'Không có dấu hiệu bất cẩn'
+              : `câu sai trong < 30% thời gian`
+          }
+        />
+        <SignalTile
+          icon="🧠"
+          title="Lỗ hổng nền"
+          tone={signals.conceptGap.count > 3 ? 'bad' : 'neutral'}
+          bigText={String(signals.conceptGap.count)}
+          smallText={
+            signals.conceptGap.count === 0
+              ? 'Vững ở mức Nhận biết'
+              : `câu mức Nhận biết sai`
+          }
+        />
+        <SignalTile
+          icon="⚙️"
+          title="Ứng dụng yếu"
+          tone={signals.applicationWeak.topicIds.length > 0 ? 'warn' : 'neutral'}
+          bigText={String(signals.applicationWeak.topicIds.length)}
+          smallText={
+            signals.applicationWeak.topicIds.length === 0
+              ? 'Áp dụng tốt kiến thức đã hiểu'
+              : describeWeakTopics(signals.applicationWeak.topicIds)
+          }
+        />
+        <SignalTile
+          icon={speedIcon(signals.speedProfile.kind)}
+          title="Tốc độ"
+          tone="speed"
+          bigText={speedLabel[signals.speedProfile.kind]}
+          smallText={speedDetail}
+        />
+      </div>
     </div>
   )
 }
@@ -94,25 +96,26 @@ interface SignalTileProps {
   title: string
   bigText: string
   smallText: string
-  tone: 'neutral' | 'warn' | 'bad'
+  tone: 'neutral' | 'warn' | 'bad' | 'speed'
 }
 
 function SignalTile({ icon, title, bigText, smallText, tone }: SignalTileProps) {
-  const toneClass = {
-    neutral: 'border-slate-200 bg-white',
-    warn: 'border-amber-200 bg-amber-50',
-    bad: 'border-rose-200 bg-rose-50',
-  }[tone]
+  const toneClass = cn(
+    'rounded-2xl p-4 text-center',
+    tone === 'warn' && 'bg-[#b2f746]/[0.12]',
+    tone === 'bad' && 'bg-rose-500/20',
+    tone === 'speed' && 'bg-[#b2f746]/[0.08]',
+    tone === 'neutral' && 'bg-white/[0.07]',
+  )
 
   return (
-    <div className={cn('rounded-xl border p-4', toneClass)}>
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-        {icon} {title}
+    <div className={toneClass}>
+      <div className="text-xl">{icon}</div>
+      <div className="mt-2 text-2xl font-black leading-tight text-white">{bigText}</div>
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">
+        {title}
       </div>
-      <div className="mt-1 text-2xl font-bold text-slate-900">{bigText}</div>
-      <div className="mt-1 text-xs leading-relaxed text-slate-600">
-        {smallText}
-      </div>
+      <div className="mt-1.5 text-[10px] leading-relaxed text-white/35">{smallText}</div>
     </div>
   )
 }

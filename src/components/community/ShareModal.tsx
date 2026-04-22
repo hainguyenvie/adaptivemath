@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Button } from '../ui/Button'
 import { AVATAR_OPTIONS, STUDY_TOOL_OPTIONS, type ShareFormData } from '../../types/community'
 import { cn } from '../../lib/cn'
 
@@ -27,23 +26,30 @@ export function ShareModal({ onSubmit, onClose, loading }: ShareModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#002117]/50 px-4 py-8 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-4">
-          <h2 className="text-lg font-bold text-slate-900">
-            🌐 Chia sẻ lộ trình
-          </h2>
-          <button onClick={onClose} className="rounded-full bg-slate-100 p-1.5 hover:bg-slate-200">
-            ✕
+      <div className="relative max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-[2rem] bg-white shadow-2xl shadow-[#002117]/20">
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-[2rem] border-b border-emerald-100 bg-white px-7 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#064e3b]">
+              <span className="material-symbols-outlined text-base text-[#b2f746]">share</span>
+            </div>
+            <h2 className="text-lg font-extrabold text-[#003527]">Chia sẻ lộ trình</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 text-[#404944] transition hover:bg-emerald-50"
+          >
+            <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <div className="space-y-5 px-6 py-5">
+        <div className="space-y-6 px-7 py-6">
           {/* Display name */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-bold text-[#003527]">
               Tên hiển thị
             </label>
             <input
@@ -52,15 +58,13 @@ export function ShareModal({ onSubmit, onClose, loading }: ShareModalProps) {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Ví dụ: Minh Anh"
               maxLength={30}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+              className="w-full rounded-2xl border border-emerald-200 bg-emerald-50/50 px-4 py-2.5 text-sm font-medium text-[#003527] placeholder:text-[#404944]/40 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
             />
           </div>
 
           {/* Avatar */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Avatar
-            </label>
+            <label className="mb-2 block text-sm font-bold text-[#003527]">Avatar</label>
             <div className="flex flex-wrap gap-2">
               {AVATAR_OPTIONS.map((emoji) => (
                 <button
@@ -68,10 +72,10 @@ export function ShareModal({ onSubmit, onClose, loading }: ShareModalProps) {
                   type="button"
                   onClick={() => setAvatar(emoji)}
                   className={cn(
-                    'flex h-10 w-10 items-center justify-center rounded-full text-xl transition',
+                    'flex h-11 w-11 items-center justify-center rounded-full text-2xl transition',
                     avatar === emoji
-                      ? 'bg-brand-100 ring-2 ring-brand-500'
-                      : 'bg-slate-100 hover:bg-slate-200',
+                      ? 'bg-[#b2f746] ring-2 ring-[#064e3b]'
+                      : 'bg-emerald-50 hover:bg-emerald-100',
                   )}
                 >
                   {emoji}
@@ -82,8 +86,8 @@ export function ShareModal({ onSubmit, onClose, loading }: ShareModalProps) {
 
           {/* Motivation */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Lời nhắn (tuỳ chọn)
+            <label className="mb-1.5 block text-sm font-bold text-[#003527]">
+              Lời nhắn <span className="font-normal text-[#404944]/60">(tuỳ chọn)</span>
             </label>
             <input
               type="text"
@@ -91,17 +95,16 @@ export function ShareModal({ onSubmit, onClose, loading }: ShareModalProps) {
               onChange={(e) => setMotivation(e.target.value)}
               placeholder="Ví dụ: Cố gắng đỗ THPT QG!"
               maxLength={200}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+              className="w-full rounded-2xl border border-emerald-200 bg-emerald-50/50 px-4 py-2.5 text-sm font-medium text-[#003527] placeholder:text-[#404944]/40 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
             />
-            <p className="mt-1 text-right text-[10px] text-slate-400">
-              {motivation.length}/200
-            </p>
+            <p className="mt-1 text-right text-xs text-[#404944]/50">{motivation.length}/200</p>
           </div>
 
           {/* Study tools */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Công cụ học tập (chọn nhiều)
+            <label className="mb-2 block text-sm font-bold text-[#003527]">
+              Công cụ học tập{' '}
+              <span className="font-normal text-[#404944]/60">(chọn nhiều)</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {STUDY_TOOL_OPTIONS.map((tool) => (
@@ -110,13 +113,15 @@ export function ShareModal({ onSubmit, onClose, loading }: ShareModalProps) {
                   type="button"
                   onClick={() => toggleTool(tool)}
                   className={cn(
-                    'rounded-full border px-3 py-1 text-xs font-medium transition',
+                    'rounded-full border px-3.5 py-1.5 text-xs font-bold transition',
                     studyTools.includes(tool)
-                      ? 'border-brand-500 bg-brand-50 text-brand-700'
-                      : 'border-slate-300 bg-white text-slate-600 hover:border-brand-300',
+                      ? 'border-[#064e3b] bg-[#064e3b] text-[#b2f746]'
+                      : 'border-emerald-200 bg-emerald-50 text-[#003527] hover:border-emerald-400',
                   )}
                 >
-                  {studyTools.includes(tool) ? '✓ ' : ''}
+                  {studyTools.includes(tool) && (
+                    <span className="mr-1">✓</span>
+                  )}
                   {tool}
                 </button>
               ))}
@@ -124,19 +129,33 @@ export function ShareModal({ onSubmit, onClose, loading }: ShareModalProps) {
           </div>
         </div>
 
-        <div className="sticky bottom-0 flex gap-3 border-t bg-white px-6 py-4">
-          <Button variant="secondary" size="md" onClick={onClose} className="flex-1">
+        {/* Footer */}
+        <div className="sticky bottom-0 flex gap-3 rounded-b-[2rem] border-t border-emerald-100 bg-white px-7 py-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-full border border-emerald-200 py-2.5 text-sm font-bold text-[#003527] transition hover:bg-emerald-50"
+          >
             Huỷ
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
+          </button>
+          <button
+            type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1"
+            className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#064e3b] py-2.5 text-sm font-black text-[#b2f746] transition hover:bg-[#003527] disabled:opacity-60"
           >
-            {loading ? 'Đang chia sẻ…' : 'Chia sẻ →'}
-          </Button>
+            {loading ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-base">autorenew</span>
+                Đang chia sẻ…
+              </>
+            ) : (
+              <>
+                Chia sẻ
+                <span className="material-symbols-outlined text-base">trending_flat</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

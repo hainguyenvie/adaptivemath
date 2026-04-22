@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../ui/Card'
 import { cn } from '../../lib/cn'
@@ -346,25 +346,22 @@ export function PracticeRunner({
     setPhase('result')
   }, [practiceResponses, assessResponses, learner, topicId, sessionStartedAt])
 
-  // --- Render ---
+  // Skip empty phases via effects — never setState inside render.
+  useEffect(() => {
+    if (phase === 'warmup' && selection.warmup.length === 0) {
+      setPhase('practice')
+      setQuestionIdx(0)
+      setQuestionStartedAt(Date.now())
+    }
+  }, [phase, selection.warmup.length])
 
-  // Skip empty phases.
-  if (phase === 'warmup' && selection.warmup.length === 0) {
-    // No warm-up questions → jump straight to practice.
-    if (phase === 'warmup') {
-      setTimeout(() => {
-        setPhase('practice')
-        setQuestionIdx(0)
-        setQuestionStartedAt(Date.now())
-      }, 0)
+  useEffect(() => {
+    if (phase === 'assessment' && selection.assessment.length === 0 && !resultData) {
+      finalizeSession()
     }
-  }
-  if (phase === 'assessment' && selection.assessment.length === 0) {
-    // No assessment questions → finalize.
-    if (!resultData) {
-      setTimeout(() => finalizeSession(), 0)
-    }
-  }
+  }, [phase, selection.assessment.length, resultData, finalizeSession])
+
+  // --- Render ---
 
   // Result phase.
   if (phase === 'result' && resultData) {

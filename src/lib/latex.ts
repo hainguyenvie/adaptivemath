@@ -51,6 +51,12 @@ export function preprocessLatex(raw: string): string {
   //    later regexes don't accidentally match inside comments.
   out = stripLatexComments(out)
 
+  // 0b. Unwrap \immini{text}{figure} — a Vietnamese corpus layout macro that
+  //     places text alongside a TikZ figure. We extract the text (arg1) and
+  //     the [TIKZ:hash] placeholder from the figure (arg2), discarding the
+  //     wrapper syntax so `}{` and stray `{}`s never leak into the output.
+  out = stripImmini(out)
+
   // 1. Strip `\def\name{value}` declarations — these are author-side
   //    shortcuts (e.g. `\def\dotEX{}`) that leak into prompts when authors
   //    forget to confine them. They're not visible content.
@@ -243,6 +249,94 @@ function guessOlType(opt: string | undefined): string | null {
   if (/^[iI][\)\.]?$/.test(trimmed)) return trimmed[0]
   if (/^1[\)\.]?$/.test(trimmed)) return '1'
   return null
+}
+
+/**
+ * Extract the content of a single brace-delimited argument starting at
+ * `start` (which must point at the opening `{`). Returns the inner content
+ * and the index one past the closing `}`, or `null` if braces are unbalanced.
+ *
+ * A preceding `\` causes the next char to be skipped so `\{` and `\}` inside
+ * arguments are not counted as brace delimiters.
+ */
+function extractBracedArg(src: string, start: number): { content: string; end: number } | null {
+  if (start >= src.length || src[start] !== '{') return null
+  let depth = 0
+  let i = start
+  while (i < src.length) {
+    const ch = src[i]
+    if (ch === '\\') {
+      i += 2
+      continue
+    }
+    if (ch === '{') {
+      depth++
+    } else if (ch === '}') {
+      depth--
+      if (depth === 0) {
+        return { content: src.slice(start + 1, i), end: i + 1 }
+      }
+    }
+    i++
+  }
+  return null
+}
+
+/**
+ * Replace `\immini{text}{figure}` with `text\n[TIKZ:hash]` (or just `text`
+ * when arg2 has no TIKZ placeholder). `\immini` is a custom Vietnamese
+ * textbook macro that lays text beside a TikZ figure; the build pipeline
+ * already replaced raw TikZ blocks with `[TIKZ:<hash>]` tokens, so we only
+ * need to unwrap the structural wrapper here.
+ */
+function stripImmini(src: string): string {
+  const MACRO = '\\immini'
+  let result = ''
+  let i = 0
+  while (i < src.length) {
+    const idx = src.indexOf(MACRO, i)
+    if (idx === -1) {
+      result += src.slice(i)
+      break
+    }
+    result += src.slice(i, idx)
+
+    // Skip any whitespace between macro name and first {
+    let j = idx + MACRO.length
+    while (j < src.length && src[j] === ' ') j++
+
+    const arg1 = extractBracedArg(src, j)
+    if (!arg1) {
+      // Unrecognised usage — pass through and advance past the macro name only.
+      result += MACRO
+      i = idx + MACRO.length
+      continue
+    }
+
+    // Skip whitespace between the two arguments.
+    j = arg1.end
+    while (j < src.length && /\s/.test(src[j])) j++
+
+    const arg2 = extractBracedArg(src, j)
+
+    const textPart = arg1.content.trim()
+
+    if (arg2) {
+      // Pull only the [TIKZ:hash] placeholder out of arg2; discard the raw
+      // braces and any other structural noise from the figure environment.
+      const tikzMatch = arg2.content.match(/\[TIKZ:[a-f0-9]{12}\]/)
+      if (tikzMatch) {
+        result += textPart + '\n' + tikzMatch[0]
+      } else {
+        result += textPart
+      }
+      i = arg2.end
+    } else {
+      result += textPart
+      i = arg1.end
+    }
+  }
+  return result
 }
 
 /**

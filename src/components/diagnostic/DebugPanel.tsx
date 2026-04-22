@@ -9,6 +9,7 @@ import {
   probabilityCorrect,
 } from '../../lib/irt'
 import { cn } from '../../lib/cn'
+import { DiagnosticIcon } from './DiagnosticIcon'
 
 interface DebugPanelProps {
   session: SessionState
@@ -86,7 +87,7 @@ export function DebugPanel({
   currentQuestion,
   topicTitleById,
 }: DebugPanelProps) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const lastResponse = session.responses.at(-1) ?? null
 
@@ -108,20 +109,24 @@ export function DebugPanel({
   const currentTopicState = session.topicStates[currentQuestion.topicId]
 
   return (
-    <div className="rounded-xl border border-amber-300 bg-amber-50/80 text-xs font-mono text-slate-800">
+    <div className="glass-panel overflow-hidden rounded-[2rem] border border-[#95d3ba]/60 bg-white/62 text-xs font-mono text-[#003527] shadow-[0_18px_50px_rgba(0,53,39,0.08)]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 hover:bg-amber-100"
+        className="flex w-full items-center justify-between gap-2 px-5 py-3 text-left transition hover:bg-[#e4fbef]/70"
       >
-        <span className="font-semibold uppercase tracking-wide text-amber-900">
-          🔧 Debug — CAT state
+        <span className="flex items-center gap-2 font-black uppercase tracking-[0.16em] text-[#446900]">
+          <DiagnosticIcon name="chip" className="h-4 w-4" />
+          Debug CAT
         </span>
-        <span className="text-amber-700">{open ? '▾' : '▸'}</span>
+        <DiagnosticIcon
+          name={open ? 'chevronUp' : 'chevronDown'}
+          className="text-[#446900]"
+        />
       </button>
 
       {open && (
-        <div className="space-y-4 border-t border-amber-200 p-3">
+        <div className="space-y-4 border-t border-[#cdeedd] p-5">
           <Section title="Current question">
             <Row label="id" value={currentQuestion.id} mono />
             <Row label="type" value={currentQuestion.type} />
@@ -253,7 +258,7 @@ export function DebugPanel({
 
           <Section title="Topic distribution">
             {topicCounts.length === 0 ? (
-              <div className="text-slate-500">(no responses yet)</div>
+              <div className="text-[#404944]">(no responses yet)</div>
             ) : (
               topicCounts.map((t) => (
                 <Row
@@ -283,7 +288,7 @@ interface SectionProps {
 function Section({ title, children }: SectionProps) {
   return (
     <div>
-      <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-amber-900">
+      <div className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#446900]">
         {title}
       </div>
       <div className="space-y-0.5">{children}</div>
@@ -302,19 +307,19 @@ interface RowProps {
 function Row({ label, value, hint, mono, tone }: RowProps) {
   const toneClass =
     tone === 'good'
-      ? 'text-emerald-700'
+      ? 'text-[#0b6b4f]'
       : tone === 'warn'
-        ? 'text-amber-700'
+        ? 'text-[#7a5d00]'
         : tone === 'bad'
-          ? 'text-rose-700'
-          : 'text-slate-800'
+          ? 'text-[#ba1a1a]'
+          : 'text-[#003527]'
   return (
     <div className="flex items-start justify-between gap-3">
-      <span className="text-slate-500">{label}</span>
+      <span className="text-[#404944]">{label}</span>
       <span className={cn('text-right', mono && 'break-all', toneClass)}>
         {value}
         {hint && (
-          <span className="ml-2 text-[10px] text-slate-400 normal-case">
+          <span className="ml-2 text-[10px] text-[#2b6954]/60 normal-case">
             {hint}
           </span>
         )}

@@ -1,21 +1,39 @@
-import { useEffect, useState } from 'react'
 import {
   BrowserRouter,
   Navigate,
   Route,
   Routes,
 } from 'react-router-dom'
-import { OnboardingPage } from './pages/OnboardingPage'
+import { lazy, Suspense } from 'react'
 import { HomePage } from './pages/HomePage'
-import { DiagnosticPage } from './pages/DiagnosticPage'
-import { KnowledgeProfilePage } from './pages/KnowledgeProfilePage'
-import { LearningPathPage } from './pages/LearningPathPage'
-import { TheoryViewerPage } from './pages/TheoryViewerPage'
-import { PracticeSessionPage } from './pages/PracticeSessionPage'
-import { ErrorJournalPage } from './pages/ErrorJournalPage'
-import { CommunityPage } from './pages/CommunityPage'
-import { DebugQuestionsPage } from './pages/DebugQuestionsPage'
-import { loadProfile } from './lib/storage'
+
+const OnboardingPage = lazy(() =>
+  import('./pages/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
+)
+const DiagnosticPage = lazy(() =>
+  import('./pages/DiagnosticPage').then((m) => ({ default: m.DiagnosticPage })),
+)
+const KnowledgeProfilePage = lazy(() =>
+  import('./pages/KnowledgeProfilePage').then((m) => ({ default: m.KnowledgeProfilePage })),
+)
+const LearningPathPage = lazy(() =>
+  import('./pages/LearningPathPage').then((m) => ({ default: m.LearningPathPage })),
+)
+const TheoryViewerPage = lazy(() =>
+  import('./pages/TheoryViewerPage').then((m) => ({ default: m.TheoryViewerPage })),
+)
+const PracticeSessionPage = lazy(() =>
+  import('./pages/PracticeSessionPage').then((m) => ({ default: m.PracticeSessionPage })),
+)
+const ErrorJournalPage = lazy(() =>
+  import('./pages/ErrorJournalPage').then((m) => ({ default: m.ErrorJournalPage })),
+)
+const CommunityPage = lazy(() =>
+  import('./pages/CommunityPage').then((m) => ({ default: m.CommunityPage })),
+)
+const DebugQuestionsPage = lazy(() =>
+  import('./pages/DebugQuestionsPage').then((m) => ({ default: m.DebugQuestionsPage })),
+)
 
 /**
  * Root routing — clean flow:
@@ -30,43 +48,30 @@ import { loadProfile } from './lib/storage'
  *   /errors     → Error journal
  *   /debug/*    → Dev tools
  *
- * Gate: if no profile exists, redirect to /onboarding.
+ * First visit lands on /; the homepage then guides new users to onboarding
+ * before they can start the diagnostic.
  */
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/" element={<HomeGate />} />
-        <Route path="/home" element={<Navigate to="/" replace />} />
-        <Route path="/diagnostic" element={<DiagnosticPage />} />
-        <Route path="/profile" element={<KnowledgeProfilePage />} />
-        <Route path="/learning-path" element={<LearningPathPage />} />
-        <Route path="/theory" element={<TheoryViewerPage />} />
-        <Route path="/practice" element={<PracticeSessionPage />} />
-        <Route path="/errors" element={<ErrorJournalPage />} />
-        <Route path="/community" element={<CommunityPage />} />
-        <Route path="/debug/questions" element={<DebugQuestionsPage />} />
-        {/* Legacy routes → redirect */}
-        <Route path="/diagnostic/result" element={<Navigate to="/profile" replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/diagnostic" element={<DiagnosticPage />} />
+          <Route path="/profile" element={<KnowledgeProfilePage />} />
+          <Route path="/learning-path" element={<LearningPathPage />} />
+          <Route path="/theory" element={<TheoryViewerPage />} />
+          <Route path="/practice" element={<PracticeSessionPage />} />
+          <Route path="/errors" element={<ErrorJournalPage />} />
+          <Route path="/community" element={<CommunityPage />} />
+          <Route path="/debug/questions" element={<DebugQuestionsPage />} />
+          {/* Legacy routes → redirect */}
+          <Route path="/diagnostic/result" element={<Navigate to="/profile" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
-}
-
-/**
- * Gate component: if profile exists → show HomePage dashboard.
- * If not → redirect to /onboarding.
- */
-function HomeGate() {
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    setHasProfile(loadProfile() !== null)
-  }, [])
-
-  if (hasProfile === null) return null
-  if (!hasProfile) return <Navigate to="/onboarding" replace />
-  return <HomePage />
 }

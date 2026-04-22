@@ -27,20 +27,25 @@ export function GradeStep() {
   const { state, dispatch } = useOnboarding()
 
   return (
-    <div>
-      <h2 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+    <div className="text-center">
+      <h2 className="mx-auto max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-[#003527] sm:text-5xl">
         Bạn đang học lớp mấy?
       </h2>
-      <p className="mb-6 text-slate-600">
+      <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-[#404944]">
         Chúng tôi sẽ giới hạn chương trình theo đúng lớp của bạn.
       </p>
-      <RadioCardGroup<Grade>
-        name="grade"
-        columns={3}
-        value={state.grade}
-        onChange={(value) => dispatch({ type: 'set', payload: { grade: value } })}
-        options={GRADE_OPTIONS}
-      />
+
+      <div className="mt-12">
+        <RadioCardGroup<Grade>
+          name="grade"
+          columns={3}
+          value={state.grade}
+          onChange={(value) =>
+            dispatch({ type: 'set', payload: { grade: value } })
+          }
+          options={GRADE_OPTIONS}
+        />
+      </div>
     </div>
   )
 }

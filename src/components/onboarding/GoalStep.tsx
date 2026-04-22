@@ -13,25 +13,30 @@ export function GoalStep() {
   const { state, dispatch } = useOnboarding()
 
   return (
-    <div>
-      <h2 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+    <div className="text-center">
+      <h2 className="mx-auto max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-[#003527] sm:text-5xl">
         Mục tiêu học tập của bạn là gì?
       </h2>
-      <p className="mb-6 text-slate-600">
+      <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-[#404944]">
         Chúng tôi sẽ ưu tiên chủ đề và độ sâu bài học phù hợp với mục tiêu.
       </p>
-      <RadioCardGroup<Goal>
-        name="goal"
-        columns={2}
-        value={state.goal}
-        onChange={(value) => dispatch({ type: 'set', payload: { goal: value } })}
-        options={GOAL_OPTIONS.map((opt) => ({
-          value: opt.value,
-          label: opt.label,
-          description: opt.description,
-          icon: ICONS[opt.value],
-        }))}
-      />
+
+      <div className="mt-12">
+        <RadioCardGroup<Goal>
+          name="goal"
+          columns={2}
+          value={state.goal}
+          onChange={(value) =>
+            dispatch({ type: 'set', payload: { goal: value } })
+          }
+          options={GOAL_OPTIONS.map((opt) => ({
+            value: opt.value,
+            label: opt.label,
+            description: opt.description,
+            icon: ICONS[opt.value],
+          }))}
+        />
+      </div>
     </div>
   )
 }

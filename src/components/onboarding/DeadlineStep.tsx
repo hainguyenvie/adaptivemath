@@ -1,10 +1,18 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useOnboarding } from '../../contexts/OnboardingContext'
+import { cn } from '../../lib/cn'
+
+function formatDateDDMMYYYY(value: string | null | undefined): string {
+  if (!value) return ''
+  const [year, month, day] = value.split('-')
+  if (!year || !month || !day) return value
+  return `${day}/${month}/${year}`
+}
 
 export function DeadlineStep() {
   const { state, dispatch } = useOnboarding()
+  const dateInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Minimum date should be tomorrow so students cannot pick the past or today.
   const minDate = useMemo(() => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
@@ -12,75 +20,129 @@ export function DeadlineStep() {
   }, [])
 
   const hasDeadline = state.deadline !== null && state.deadline !== undefined
-
-  const handleToggle = (checked: boolean) => {
-    dispatch({
-      type: 'set',
-      payload: { deadline: checked ? null : (state.deadline ?? minDate) },
-    })
-  }
-
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value
-    dispatch({ type: 'set', payload: { deadline: value || null } })
-  }
+  const selectedDate = state.deadline ?? minDate
 
   const daysUntil = useMemo(() => {
     if (!state.deadline) return null
-    const diff = new Date(state.deadline).getTime() - Date.now()
-    if (Number.isNaN(diff)) return null
+    const [year, month, day] = state.deadline.split('-').map(Number)
+    if (!year || !month || !day) return null
+
+    const target = new Date(year, month - 1, day)
+    const today = new Date()
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    )
+    const diff = target.getTime() - startOfToday.getTime()
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
   }, [state.deadline])
 
+  const handleOpenDatePicker = () => {
+    dispatch({
+      type: 'set',
+      payload: { deadline: state.deadline ?? minDate },
+    })
+
+    queueMicrotask(() => {
+      dateInputRef.current?.focus()
+      dateInputRef.current?.showPicker?.()
+    })
+  }
+
+  const handleNoDeadline = () => {
+    dispatch({ type: 'set', payload: { deadline: null } })
+  }
+
   return (
-    <div>
-      <h2 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl">
-        Bạn có deadline cụ thể không?
-      </h2>
-      <p className="mb-6 text-slate-600">
-        Nếu có (ví dụ: thi học kỳ hay thi thử), chúng tôi sẽ dồn lộ trình
-        tương ứng. Bạn có thể bỏ qua bước này.
-      </p>
+    <div className="flex h-full flex-col">
+      <div className="space-y-4 text-center">
+        <h2 className="mx-auto max-w-4xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[#003527] sm:text-5xl">
+          Bạn có deadline cụ thể không?
+        </h2>
+        <p className="mx-auto max-w-3xl text-base leading-relaxed text-[#646f6a] sm:text-lg">
+          Nếu có (ví dụ: thi học kỳ hay thi thử), chúng tôi sẽ dồn lộ trình
+          tương ứng. Bạn có thể bỏ qua bước này.
+        </p>
+      </div>
 
-      <div className="space-y-4">
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-brand-400">
-          <input
-            type="checkbox"
-            className="h-5 w-5 cursor-pointer accent-brand-600"
-            checked={!hasDeadline}
-            onChange={(event) => handleToggle(event.target.checked)}
-          />
-          <span className="text-slate-700">Tôi chưa có deadline cụ thể</span>
-        </label>
-
-        <div
-          className={`rounded-xl border p-5 transition ${
+      <div className="mt-10 grid flex-1 gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <button
+          type="button"
+          onClick={handleOpenDatePicker}
+          className={cn(
+            'flex min-h-[320px] flex-col rounded-[3rem] border-2 border-[#edf1ef] bg-white px-8 py-8 text-left shadow-[0_8px_30px_rgba(0,53,39,0.04)] transition-all duration-300',
             hasDeadline
-              ? 'border-brand-300 bg-brand-50'
-              : 'border-slate-200 bg-slate-50 opacity-60'
-          }`}
+              ? 'border-[#9bc9ea] ring-2 ring-[#9bc9ea] shadow-[0_16px_42px_rgba(155,201,234,0.18)]'
+              : 'hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(0,53,39,0.08)]',
+          )}
         >
-          <label
-            htmlFor="deadline-date"
-            className="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <div className="text-2xl font-extrabold tracking-tight text-[#294e3f]">
             Ngày mục tiêu
-          </label>
+          </div>
+
+          <div className="mt-4 rounded-[2rem] border border-[#eef4ef] bg-white px-5 py-5 shadow-[0_10px_24px_rgba(0,53,39,0.04)]">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#dff8ea] text-[1.35rem]">
+                📅
+              </div>
+              <div className="text-[1.7rem] font-extrabold leading-none tracking-tight text-[#294e3f] sm:text-[1.9rem]">
+                {formatDateDDMMYYYY(selectedDate)}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-[1.6rem] border border-[#dfeeb6] bg-[#effae0] px-6 py-4 text-[#446900] shadow-[inset_0_0_0_1px_rgba(178,247,70,0.08)]">
+            <span className="inline-flex items-center gap-2 text-base font-medium">
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#446900] text-[10px] leading-none text-white">
+                i
+              </span>
+              {daysUntil === null ? (
+                'Còn 1 ngày nữa đến deadline.'
+              ) : (
+                <>
+                  Còn <strong>{daysUntil}</strong> ngày nữa đến deadline.
+                </>
+              )}
+            </span>
+          </div>
+
           <input
+            ref={dateInputRef}
             id="deadline-date"
             type="date"
             min={minDate}
-            disabled={!hasDeadline}
-            value={state.deadline ?? ''}
-            onChange={handleDateChange}
-            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-base text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:cursor-not-allowed disabled:bg-slate-100"
+            value={selectedDate}
+            onChange={(event) =>
+              dispatch({
+                type: 'set',
+                payload: { deadline: event.target.value || null },
+              })
+            }
+            className="sr-only"
           />
-          {hasDeadline && daysUntil !== null && (
-            <p className="mt-2 text-sm text-brand-700">
-              Còn <strong>{daysUntil}</strong> ngày nữa đến deadline.
-            </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleNoDeadline}
+          className={cn(
+            'flex min-h-[320px] flex-col justify-center rounded-[3rem] border-2 border-[#edf1ef] bg-white px-8 py-8 text-left shadow-[0_8px_30px_rgba(0,53,39,0.04)] transition-all duration-300',
+            !hasDeadline
+              ? 'border-[#9bc9ea] ring-2 ring-[#9bc9ea] shadow-[0_16px_42px_rgba(155,201,234,0.18)]'
+              : 'hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(0,53,39,0.08)]',
           )}
-        </div>
+        >
+          <div className="mb-12 flex h-16 w-16 items-center justify-center rounded-full bg-[#b9f0df] text-[1.5rem]">
+            🗓️
+          </div>
+          <div className="max-w-md whitespace-nowrap text-[1.8rem] font-extrabold leading-tight tracking-tight text-[#294e3f]">
+            Tôi chưa có deadline cụ thể
+          </div>
+          <p className="mt-4 max-w-sm text-base leading-relaxed text-[#66756f] sm:text-lg">
+            Lộ trình của bạn sẽ được thiết kế theo nhịp độ trung bình.
+          </p>
+        </button>
       </div>
     </div>
   )

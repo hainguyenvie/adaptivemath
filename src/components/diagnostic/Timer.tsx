@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { cn } from '../../lib/cn'
+import { DiagnosticIcon } from './DiagnosticIcon'
 
 interface TimerProps {
   /** Seconds allotted for the current question. */
@@ -21,27 +22,28 @@ interface TimerProps {
  * Critical: only calls `onExpire` exactly once when the remaining time hits 0.
  */
 export function Timer({ totalSeconds, startedAt, onExpire }: TimerProps) {
-  const [remaining, setRemaining] = useState(totalSeconds)
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    setRemaining(totalSeconds)
+    let expired = false
 
     const tick = () => {
-      const elapsed = (Date.now() - startedAt) / 1000
-      const rem = Math.max(0, totalSeconds - elapsed)
-      setRemaining(rem)
-      if (rem <= 0) {
+      const nextNow = Date.now()
+      setNow(nextNow)
+      const elapsed = (nextNow - startedAt) / 1000
+      if (!expired && elapsed >= totalSeconds) {
+        expired = true
         clearInterval(id)
         onExpire()
       }
     }
 
-    // Run once immediately, then every 250ms.
-    tick()
     const id = window.setInterval(tick, 250)
     return () => clearInterval(id)
   }, [startedAt, totalSeconds, onExpire])
 
+  const elapsed = (now - startedAt) / 1000
+  const remaining = Math.max(0, totalSeconds - elapsed)
   const pct = Math.max(0, Math.min(1, remaining / totalSeconds))
   const danger = pct < 0.2
 
@@ -50,20 +52,21 @@ export function Timer({ totalSeconds, startedAt, onExpire }: TimerProps) {
   const display = `${mm}:${ss.toString().padStart(2, '0')}`
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 rounded-full border border-white/70 bg-[#e4fbef]/90 px-3 py-2 shadow-sm">
       <div
         className={cn(
-          'text-sm font-semibold tabular-nums',
-          danger ? 'text-red-600' : 'text-slate-600',
+          'flex items-center gap-1.5 text-sm font-black tabular-nums',
+          danger ? 'text-[#ba1a1a]' : 'text-[#003527]',
         )}
       >
-        ⏱️ {display}
+        <DiagnosticIcon name="clock" className="h-4 w-4" />
+        {display}
       </div>
-      <div className="h-1.5 w-28 overflow-hidden rounded-full bg-slate-200">
+      <div className="h-2 w-20 overflow-hidden rounded-full bg-[#cdeedd] sm:w-28">
         <div
           className={cn(
             'h-full rounded-full transition-[width] duration-200 ease-linear',
-            danger ? 'bg-red-500' : 'bg-brand-500',
+            danger ? 'bg-[#ba1a1a]' : 'bg-[#b2f746]',
           )}
           style={{ width: `${pct * 100}%` }}
         />

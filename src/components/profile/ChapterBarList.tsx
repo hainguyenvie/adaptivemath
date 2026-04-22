@@ -43,35 +43,35 @@ export function ChapterBarList({ topics, chapters }: ChapterBarListProps) {
         return (
           <div
             key={chapter.chapterTitle}
-            className="rounded-xl border border-slate-200 bg-white"
+            className="overflow-hidden rounded-2xl border border-[#cdeedd]"
           >
             <button
               type="button"
               onClick={() => toggle(chapter.chapterTitle)}
-              className="flex w-full items-center justify-between gap-4 px-5 py-3 text-left hover:bg-slate-50"
+              className="flex w-full items-center justify-between gap-4 bg-[#f4fff9] px-5 py-3 text-left transition hover:bg-[#e4fbef]"
               aria-expanded={open}
             >
               <div className="flex items-center gap-3">
-                <span className="text-slate-400">{open ? '▾' : '▸'}</span>
+                <span className="text-[#9fb3aa]">{open ? '▾' : '▸'}</span>
                 <div>
-                  <div className="font-semibold text-slate-900">
+                  <div className="font-black text-[#003527]">
                     {chapter.chapterTitle}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-[#9fb3aa]">
                     {chapter.testedCount}/{chapter.topicCount} chủ đề đã kiểm tra
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <MiniBar value={chapter.mastery} />
-                <span className="tabular-nums text-sm font-medium text-slate-700">
+                <span className="tabular-nums text-sm font-black text-[#446900]">
                   {(chapter.mastery * 100).toFixed(0)}%
                 </span>
               </div>
             </button>
 
             {open && (
-              <div className="space-y-2 border-t border-slate-100 px-5 py-4">
+              <div className="space-y-2 border-l-4 border-[#e4fbef] bg-white px-5 py-4">
                 {topics.map((t) => (
                   <TopicRow key={t.topicId} topic={t} />
                 ))}
@@ -147,9 +147,9 @@ function TopicRow({ topic }: { topic: TopicMastery }) {
 
 function MiniBar({ value }: { value: number }) {
   return (
-    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-200">
+    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[#cdeedd]">
       <div
-        className="h-full rounded-full bg-brand-500"
+        className="h-full rounded-full bg-gradient-to-r from-[#2dd4bf] to-[#34d399]"
         style={{ width: `${value * 100}%` }}
       />
     </div>

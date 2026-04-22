@@ -6,6 +6,7 @@ export interface RadioCardOption<T extends string | number> {
   label: ReactNode
   description?: ReactNode
   icon?: ReactNode
+  badge?: ReactNode
 }
 
 interface RadioCardGroupProps<T extends string | number> {
@@ -44,12 +45,12 @@ export function RadioCardGroup<T extends string | number>({
             key={String(option.value)}
             htmlFor={id}
             className={cn(
-              'group relative flex cursor-pointer flex-col gap-2 rounded-2xl border p-5 text-left transition-all',
-              'hover:border-brand-400 hover:shadow-md',
-              'focus-within:ring-2 focus-within:ring-brand-500 focus-within:ring-offset-2',
+              'group relative flex cursor-pointer flex-col gap-2 rounded-[1.75rem] border-2 p-6 text-left transition-all duration-300',
+              'hover:-translate-y-1 hover:border-[#b2f746] hover:shadow-[0_14px_35px_rgba(0,53,39,0.08)]',
+              'focus-within:ring-2 focus-within:ring-[#b2f746] focus-within:ring-offset-2',
               selected
-                ? 'border-brand-500 bg-brand-50 shadow-md'
-                : 'border-slate-200 bg-white',
+                ? 'border-[#b2f746] bg-white shadow-[0_18px_45px_rgba(178,247,70,0.18)]'
+                : 'border-[#c6d5cd] bg-white',
             )}
           >
             <input
@@ -62,29 +63,49 @@ export function RadioCardGroup<T extends string | number>({
             />
             <div className="flex items-start gap-3">
               {option.icon && (
-                <div className="mt-0.5 text-2xl">{option.icon}</div>
-              )}
-              <div className="flex-1">
                 <div
                   className={cn(
-                    'text-base font-semibold sm:text-lg',
-                    selected ? 'text-brand-800' : 'text-slate-800',
+                    'mt-0.5 flex h-16 w-16 shrink-0 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-110',
+                    selected ? 'bg-[#b2f746]' : 'bg-[#dff8ea]',
+                  )}
+                >
+                  <div className="text-3xl">{option.icon}</div>
+                </div>
+              )}
+              <div className="flex-1 pt-1">
+                {option.badge && (
+                  <div className="mb-2 inline-flex rounded-full bg-[#b2f746] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#003527]">
+                    {option.badge}
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    'text-xl font-extrabold tracking-tight sm:text-2xl',
+                    selected ? 'text-[#003527]' : 'text-[#003527]',
                   )}
                 >
                   {option.label}
                 </div>
                 {option.description && (
-                  <div className="mt-1 text-sm text-slate-500">
+                  <div className="mt-2 text-sm leading-relaxed text-[#404944]">
                     {option.description}
                   </div>
                 )}
+                <div className="mt-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-[#446900]">
+                    Chọn
+                    <span aria-hidden className="text-base">
+                      →
+                    </span>
+                  </span>
+                </div>
               </div>
               <div
                 className={cn(
-                  'h-5 w-5 rounded-full border-2 transition-colors',
+                  'mt-1 h-5 w-5 rounded-full border-2 transition-colors',
                   selected
-                    ? 'border-brand-600 bg-brand-600'
-                    : 'border-slate-300 bg-white',
+                    ? 'border-[#446900] bg-[#446900]'
+                    : 'border-[#9fb3aa] bg-white',
                 )}
                 aria-hidden
               >
