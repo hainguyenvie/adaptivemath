@@ -115,9 +115,24 @@ function ErrorCard({
   onRedo: () => void
 }) {
   const topic = getTopicById(error.topicId)
-  const question = QUESTION_BANK.questions.find(
-    (q) => q.id === error.questionId,
-  )
+  const question = QUESTION_BANK.questions.find((q) => q.id === error.questionId)
+  // Truncate at a `$`-balanced boundary so we never split a math segment in
+  // half (which used to leak unmatched `$` and break KaTeX rendering).
+  function safeTruncatePrompt(text: string, max: number): string {
+    if (text.length <= max) return text
+    let cut = text.slice(0, max)
+    // If the cut leaves an odd number of unescaped `$`, we landed mid-math —
+    // walk backwards to the last `$` and trim before it.
+    let dollars = 0
+    for (let i = 0; i < cut.length; i++) {
+      if (cut[i] === '$' && (i === 0 || cut[i - 1] !== '\\')) dollars++
+    }
+    if (dollars % 2 === 1) {
+      const lastDollar = cut.lastIndexOf('$')
+      if (lastDollar > 0) cut = cut.slice(0, lastDollar)
+    }
+    return cut.trimEnd() + '…'
+  }
   const dateStr = new Date(error.timestamp).toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -152,9 +167,7 @@ function ErrorCard({
 
       {question && (
         <div className="mb-2 text-sm">
-          <LatexRenderer
-            content={question.prompt.slice(0, 200) + (question.prompt.length > 200 ? '…' : '')}
-          />
+          <LatexRenderer content={safeTruncatePrompt(question.prompt, 200)} />
         </div>
       )}
 

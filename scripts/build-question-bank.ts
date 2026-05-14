@@ -31,7 +31,7 @@
  * still produce a debug record (with `status` set to the appropriate error).
  */
 
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
@@ -61,7 +61,16 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const WEB_ROOT = resolve(__dirname, '..')
 const REPO_ROOT = resolve(WEB_ROOT, '..')
-const DATA_DIR = join(REPO_ROOT, 'data')
+// Corpus location: prefer the legacy sibling `../data`, fall back to the
+// bundled `KetNoiTriThuc2026/data` inside this repo so the build works on
+// fresh checkouts without an external corpus folder.
+const DATA_DIR = (() => {
+  const sibling = join(REPO_ROOT, 'data')
+  const bundled = join(WEB_ROOT, 'KetNoiTriThuc2026', 'data')
+  if (existsSync(sibling)) return sibling
+  if (existsSync(bundled)) return bundled
+  return sibling
+})()
 const OUT_RUNTIME = join(WEB_ROOT, 'src', 'data', 'questions.json')
 const OUT_DEBUG = join(WEB_ROOT, 'src', 'data', 'questions-debug.json')
 
@@ -630,21 +639,39 @@ function extractEnvBlocks(
       let body = section.slice(cursor, end)
 
       // Extract \loigiai if present (for vd blocks).
-      let solution: string | null = null
+      let rawSolution: string | null = null
       if (envType === 'vd') {
         const { bodyWithout, solution: sol } = extractLoigiaiFromBlock(body)
         body = bodyWithout
-        solution = sol ? preprocessLatex(sol) : null
+        rawSolution = sol
       }
 
-      // Extract TikZ.
+      // Unwrap \immini + extract TikZ from BOTH the body and the solution so
+      // diagrams render as inline SVGs instead of literal `\begin{tikzpicture}`
+      // source. The same `tikzSources` array collects from both passes so the
+      // renderer's hash lookup works either way.
       const tikzSources: string[] = []
-      const { bodyWithout: noTikz, sources: moreSources } = extractTikz(body)
-      tikzSources.push(...moreSources)
+      const { bodyWithout: bodyAfterImmini } = unwrapImmini(body, tikzSources)
+      const { bodyWithout: noTikz, sources: bodySources } =
+        extractTikz(bodyAfterImmini)
+      tikzSources.push(...bodySources)
+      body = noTikz
+
+      let solution: string | null = null
+      if (rawSolution !== null) {
+        const { bodyWithout: solAfterImmini } = unwrapImmini(
+          rawSolution,
+          tikzSources,
+        )
+        const { bodyWithout: solNoTikz, sources: solSources } =
+          extractTikz(solAfterImmini)
+        tikzSources.push(...solSources)
+        solution = preprocessLatex(solNoTikz)
+      }
+
       const tikzHashes = tikzSources.map((s) =>
         createHash('sha256').update(s).digest('hex').slice(0, 12),
       )
-      body = noTikz
 
       blocks.push({
         type: envType,
@@ -714,7 +741,8 @@ function main(): void {
       const rawBody = block.body
 
       // 1. Pull the solution out so it doesn't interfere with answer parsing.
-      const { bodyWithout: noSolution, solution } = extractLoigiai(rawBody)
+      const { bodyWithout: noSolution, solution: rawSolution } =
+        extractLoigiai(rawBody)
 
       // 2. Unwrap \immini (text+diagram). The diagram is added to the TikZ
       //    source list. The text content is folded back into the body.
@@ -728,6 +756,18 @@ function main(): void {
       const { bodyWithout: cleanedBody, sources: moreSources } =
         extractTikz(afterImmini)
       tikzSources.push(...moreSources)
+
+      // 3b. Same treatment for the solution body: unwrap \immini and pull
+      //     any tikzpicture environments inside the solution out so the
+      //     renderer can show pre-rendered SVGs instead of raw TikZ source.
+      const { bodyWithout: solAfterImmini } = unwrapImmini(
+        rawSolution,
+        tikzSources,
+      )
+      const { bodyWithout: cleanedSolution, sources: solTikzSources } =
+        extractTikz(solAfterImmini)
+      tikzSources.push(...solTikzSources)
+      const solution = cleanedSolution
 
       // Compute deterministic short hashes for each TikZ source. The render
       // script uses these as SVG filenames, and the runtime renderer looks

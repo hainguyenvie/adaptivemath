@@ -11,7 +11,6 @@ import { loadLearnerState } from '../lib/learnerStorage'
 import type { SharedPath, ShareFormData } from '../types/community'
 import type { Goal } from '../types/user'
 import { GOAL_OPTIONS } from '../types/user'
-import { cn } from '../lib/cn'
 
 export function CommunityPage() {
   const navigate = useNavigate()

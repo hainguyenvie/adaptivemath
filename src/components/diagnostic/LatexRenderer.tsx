@@ -5,6 +5,7 @@ import {
   KATEX_MACROS,
   convertTabularToHtml,
   replaceTikzPlaceholders,
+  wrapVietnameseInMath,
 } from '../../lib/latex'
 import { cn } from '../../lib/cn'
 
@@ -113,13 +114,21 @@ function tokenize(src: string): Segment[] {
  * crashes the whole question.
  */
 function renderMath(tex: string, displayMode: boolean): string {
+  // Wrap Vietnamese-text runs in `\text{...}` so KaTeX renders them upright
+  // instead of as italic chains of single-letter variables. See
+  // `wrapVietnameseInMath` for the heuristic.
+  const safeTex = wrapVietnameseInMath(tex)
   try {
-    return katex.renderToString(tex, {
+    return katex.renderToString(safeTex, {
       displayMode,
       throwOnError: false,
       strict: 'ignore',
       macros: { ...KATEX_MACROS },
       trust: false,
+      // Emit both HTML (visual) and MathML (screen readers). This is the
+      // KaTeX default, set explicitly so the intent is obvious.
+      output: 'htmlAndMathml',
+      errorColor: '#dc2626',
     })
   } catch {
     return `<code class="text-rose-600">${escapeHtml(tex)}</code>`
@@ -193,6 +202,30 @@ function maskTables(src: string): { masked: string; tables: string[] } {
   return { masked, tables }
 }
 
+/**
+ * Resolve a few common LaTeX macros that leaked into text mode (outside any
+ * `$…$`) in the corpus. Authors sometimes wrote `$P$, $Q$, $R$, \ldots` —
+ * here `\ldots` ends up in a text segment and would otherwise render as the
+ * literal string "\ldots". We don't try to be comprehensive: just map the
+ * handful that occur most often to safe Unicode equivalents, and drop
+ * layout-only macros that have no visible HTML form.
+ */
+function resolveTextModeMacros(src: string): string {
+  let out = src
+  out = out.replace(/\\(?:ldots|dots)\b/g, '…')
+  out = out.replace(/\\cdots\b/g, '⋯')
+  out = out.replace(/\\to\b/g, '→')
+  // Layout-only macros — render as nothing.
+  out = out.replace(
+    /\\(?:centerline|centering|hfill|hspace|vspace|noindent|indent|footnotesize|small|large|Large|bfseries|itshape|bf|it|em|break|linebreak|newline|allowdisplaybreaks)\b\s*/g,
+    '',
+  )
+  // Standalone `\quad` / `\qquad` in text → a couple of spaces.
+  out = out.replace(/\\quad\b/g, '  ')
+  out = out.replace(/\\qquad\b/g, '    ')
+  return out
+}
+
 function preserveInjectedHtml(src: string): string {
   // Whitelist of tags the earlier pipeline steps may have emitted:
   //   - tabular → HTML:      table / thead / tbody / tr / td / th
@@ -235,7 +268,8 @@ export function LatexRenderer({ content, className }: LatexRendererProps) {
     const rendered = segments
       .map((seg) => {
         if (seg.type === 'text') {
-          return preserveInjectedHtml(seg.value).replace(/\\\\/g, '<br/>')
+          const resolved = resolveTextModeMacros(seg.value)
+          return preserveInjectedHtml(resolved).replace(/\\\\/g, '<br/>')
         }
         return renderMath(seg.value, seg.type === 'display-math')
       })

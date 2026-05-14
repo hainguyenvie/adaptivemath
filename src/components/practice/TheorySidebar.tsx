@@ -3,6 +3,7 @@ import { LatexRenderer } from '../diagnostic/LatexRenderer'
 import { QUESTION_BANK } from '../../lib/questionBank'
 import type { TheoryBlock, TopicTheory } from '../../types/question'
 import { cn } from '../../lib/cn'
+import { latexToPlainText, truncateAtBoundary } from '../../lib/latex'
 
 interface TheorySidebarProps {
   topicId: string
@@ -68,9 +69,9 @@ export function TheorySidebar({ topicId }: TheorySidebarProps) {
           <div className="space-y-1.5 border-t border-slate-100 px-3 py-3">
             {relevantBlocks.map((block, i) => {
               const style = BLOCK_STYLES[block.type]
-              const preview =
-                block.title ??
-                block.content.replace(/<[^>]*>/g, '').slice(0, 50) + '…'
+              const preview = block.title
+                ? latexToPlainText(block.title)
+                : truncateAtBoundary(latexToPlainText(block.content), 60)
 
               return (
                 <button

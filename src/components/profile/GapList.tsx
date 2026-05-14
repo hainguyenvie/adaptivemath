@@ -1,5 +1,4 @@
 import type { GapInfo } from '../../types/profile'
-import { cn } from '../../lib/cn'
 
 interface GapListProps {
   gaps: GapInfo[]

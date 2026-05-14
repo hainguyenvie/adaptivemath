@@ -17,6 +17,130 @@
  */
 
 /**
+ * Strip LaTeX-flavoured markup from a fragment to produce readable plain text
+ * for previews, snippets, sidebar summaries, and other places that can't host
+ * full KaTeX-rendered HTML. Best-effort — meant for short snippets, not
+ * fidelity-critical content.
+ *
+ * Transformations:
+ *  - `$$...$$`, `\[...\]`, `$...$`, `\(...\)` → keep the inner content (drop
+ *    the delimiters) so users see the variables/numbers without the math
+ *    syntax noise.
+ *  - `\command{arg}` → `arg` (unwraps `\overline{a}` → `a`, `\text{nếu}` →
+ *    `nếu`, `\frac{a}{b}` → `a b`, etc.). Iterated so nested macros unwind.
+ *  - Lone `\command` (no braces) → dropped (e.g. `\Delta`, `\quad`).
+ *  - Whitespace + HTML tags → collapsed.
+ *
+ * Use {@link truncateAtBoundary} on the result if you need a fixed length.
+ */
+export function latexToPlainText(raw: string): string {
+  let out = raw
+  // Drop HTML tags first (preview text doesn't need bold/italic markers).
+  out = out.replace(/<[^>]*>/g, ' ')
+  // Strip math delimiters. Keep content so "$a=329{,}401$" → "a=329{,}401".
+  out = out.replace(/\$\$([\s\S]*?)\$\$/g, ' $1 ')
+  out = out.replace(/\\\[([\s\S]*?)\\\]/g, ' $1 ')
+  out = out.replace(/\$([^$]*)\$/g, ' $1 ')
+  out = out.replace(/\\\(([\s\S]*?)\\\)/g, ' $1 ')
+  // Unwrap `\command{arg}` iteratively so nested macros unwind.
+  for (let pass = 0; pass < 8; pass++) {
+    const before = out
+    out = out.replace(/\\[a-zA-Z]+\s*\{([^{}]*)\}/g, '$1')
+    if (out === before) break
+  }
+  // Drop remaining lone macros (no braces): `\Delta`, `\quad`, `\pm`, etc.
+  // Use a negative lookahead instead of `\b` so things like `\Delta_a`
+  // (followed by `_`, which `\b` treats as a word char) still get stripped.
+  out = out.replace(/\\[a-zA-Z]+(?![a-zA-Z])/g, '')
+  // Drop stray braces, escape sequences, and double backslashes.
+  out = out.replace(/\\\\/g, ' ')
+  out = out.replace(/[{}]/g, '')
+  out = out.replace(/\\,|\\;|\\:|\\!/g, ' ')
+  // Strip leftover subscript/superscript markers: `_a` → `a`, `x^2` → `x2`.
+  // We're past math rendering at this point; these are stylistic only.
+  out = out.replace(/[_^]/g, '')
+  // Collapse whitespace.
+  out = out.replace(/\s+/g, ' ').trim()
+  return out
+}
+
+/**
+ * Truncate a string at the last space before `max` so we never break a word
+ * (or a half-rendered math expression after `latexToPlainText` has run).
+ */
+export function truncateAtBoundary(text: string, max: number): string {
+  if (text.length <= max) return text
+  const cut = text.slice(0, max)
+  const lastSpace = cut.lastIndexOf(' ')
+  const safe = lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut
+  return safe + '…'
+}
+
+/**
+ * Wrap Vietnamese-text runs inside a math fragment with `\text{...}` so KaTeX
+ * renders them as upright text instead of as italic chains of single-letter
+ * variables.
+ *
+ * The corpus often contains free-form Vietnamese inside `$...$` /
+ * `$$...$$` (e.g. `7\,241\,920 người \pm 40\,000 người.` or
+ * `(đơn vị: nghìn đồng)`). Without wrapping, KaTeX renders each letter as a
+ * separate italic identifier with weird spacing and emits warnings about
+ * unicode-text-in-math-mode.
+ *
+ * Heuristic: walk the math string, skip macro names (`\sin`, `\heva`, …) and
+ * collapse runs of letter chars (including interior spaces) into a single
+ * token. Wrap that token in `\text{…}` when the run either contains ≥2
+ * Vietnamese-diacritic chars OR is ≥3 letters long with ≥1 diacritic. This
+ * captures real words ("nếu", "đơn vị", "người", "nghìn đồng") while
+ * leaving short labels like `_{CĐ}` and `\overrightarrow{AB}` untouched so
+ * variable identifiers keep their math italic styling.
+ */
+export function wrapVietnameseInMath(tex: string): string {
+  const LETTER = /[a-zA-ZÀ-ỹ]/
+  let out = ''
+  let i = 0
+  while (i < tex.length) {
+    const ch = tex[i]
+    // Preserve macro name: '\' + letters
+    if (ch === '\\' && LETTER.test(tex[i + 1] ?? '')) {
+      let j = i + 1
+      while (j < tex.length && LETTER.test(tex[j])) j++
+      out += tex.slice(i, j)
+      i = j
+      continue
+    }
+    // Collect a letter run, allowing single spaces between words but stopping
+    // at any non-letter (digits, punctuation, math operators, braces).
+    if (LETTER.test(ch)) {
+      let j = i
+      while (j < tex.length) {
+        if (LETTER.test(tex[j])) {
+          j++
+          continue
+        }
+        // Allow a single internal space between letter clusters so multi-word
+        // phrases like "đơn vị" stay as one run.
+        if (tex[j] === ' ' && j + 1 < tex.length && LETTER.test(tex[j + 1])) {
+          j++
+          continue
+        }
+        break
+      }
+      const run = tex.slice(i, j)
+      const diacriticCount = (run.match(/[À-ỹ]/g) ?? []).length
+      const letterCount = run.replace(/\s+/g, '').length
+      const shouldWrap = diacriticCount >= 2 || (diacriticCount >= 1 && letterCount >= 3)
+      out += shouldWrap ? `\\text{${run}}` : run
+      i = j
+      continue
+    }
+    out += ch
+    i++
+  }
+  return out
+}
+
+/**
  * Math-mode macros fed to KaTeX via the `macros` option. Each key is a new
  * command, each value is the expansion. Only math-mode content belongs here.
  */
@@ -76,21 +200,15 @@ export function preprocessLatex(raw: string): string {
 
   // 5. Strip typography instructions with no visible effect in HTML.
   out = out.replace(/\\(indent|noindent|allowdisplaybreaks)\b\s*/g, '')
-  out = out.replace(/\\vspace\{[^}]*\}\s*/g, '')
-  out = out.replace(/\\hspace\{[^}]*\}\s*/g, '')
-  // \resizebox{width}{height}{content} → just the content.
-  // Iterative because content may contain nested braces.
-  for (let pass = 0; pass < 4; pass++) {
-    const before = out
-    out = out.replace(/\\resizebox\{[^}]*\}\{[^}]*\}\{([^{}]*)\}/g, '$1')
-    if (out === before) break
-  }
-  // \scalebox{factor}{content} → just the content.
-  for (let pass = 0; pass < 4; pass++) {
-    const before = out
-    out = out.replace(/\\scalebox\{[^}]*\}\{([^{}]*)\}/g, '$1')
-    if (out === before) break
-  }
+  // `\vspace{...}` and `\hspace{...}` (with optional `*` variant for "force").
+  // Use a brace-counting unwrap so the arg can contain nested braces like
+  // `\hspace*{1cm}` next to inline math.
+  out = unwrapMacro(out, '\\vspace', { keep: false, hasStar: true })
+  out = unwrapMacro(out, '\\hspace', { keep: false, hasStar: true })
+  // `\resizebox{width}{height}{content}` → just `content`. Two ignored args.
+  out = unwrapMacro(out, '\\resizebox', { keep: true, dropArgs: 2 })
+  // `\scalebox{factor}{content}` → just `content`.
+  out = unwrapMacro(out, '\\scalebox', { keep: true, dropArgs: 1 })
 
   // 6. Author layout wrappers that render as plain content in our HTML view.
   out = out.replace(
@@ -101,12 +219,38 @@ export function preprocessLatex(raw: string): string {
     /\\begin\{multicols\}\{\d+\}([\s\S]*?)\\end\{multicols\}/g,
     (_m, inner: string) => inner.trim(),
   )
-  // Handle nested \centerline iteratively (some contain tikz or tables).
-  for (let pass = 0; pass < 4; pass++) {
-    const before = out
-    out = out.replace(/\\centerline\s*\{([^{}]*)\}/g, '$1')
-    if (out === before) break
-  }
+  // `\begin{minipage}[H]{0.3\textwidth}...\end{minipage}` — drop wrapper but
+  // keep inner content. The optional `[...]` placement and required
+  // `{<width>}` need to be discarded too.
+  out = out.replace(
+    /\\begin\{minipage\}(?:\[[^\]]*\])?\s*\{[^}]*\}([\s\S]*?)\\end\{minipage\}/g,
+    (_m, inner: string) => inner.trim(),
+  )
+  // Strip sectioning commands entirely — their content is just a heading that
+  // we don't visually emphasize in question prompts. Handles starred variant.
+  out = unwrapMacro(out, '\\subsubsection', { keep: false, hasStar: true })
+  out = unwrapMacro(out, '\\subsection', { keep: false, hasStar: true })
+  out = unwrapMacro(out, '\\section', { keep: false, hasStar: true })
+  // `\centerline{...}` — keep inner content. Uses a brace-counting parser so
+  // tikz placeholders + `\hspace*{1cm}` inside don't break it like the old
+  // `[^{}]*` regex did.
+  out = unwrapMacro(out, '\\centerline', { keep: true })
+
+  // 6b. Display-math environments that KaTeX doesn't natively support.
+  //     `eqnarray*` / `eqnarray` are wrapped in `$$\begin{aligned}…\end{aligned}$$`
+  //     so KaTeX renders them. The corpus uses `LHS &op& RHS \\` (3 columns)
+  //     for eqnarray; aligned tolerates extra `&` so we leave them in place.
+  out = out.replace(
+    /\\begin\{eqnarray\*?\}([\s\S]*?)\\end\{eqnarray\*?\}/g,
+    (_m, inner: string) => `$$\\begin{aligned}${inner}\\end{aligned}$$`,
+  )
+  // Stand-alone `align*` / `align` likewise → wrapped in `$$…$$` so KaTeX picks
+  // it up. KaTeX supports `aligned` inside math; the unstarred `align` env
+  // exists at the top level only in pure LaTeX.
+  out = out.replace(
+    /\\begin\{align\*?\}([\s\S]*?)\\end\{align\*?\}/g,
+    (_m, inner: string) => `$$\\begin{aligned}${inner}\\end{aligned}$$`,
+  )
 
   // 7. Legacy LaTeX2.09 font commands: `{\bf text}`, `{\it text}`, `{\em text}`.
   //    These are rare but appear in the corpus.
@@ -197,9 +341,12 @@ function convertListsToHtml(src: string): string {
       },
     )
 
-    // Corpus env: \begin{enumEX}{N} — numbered N-column list.
+    // Corpus env: `\begin{enumEX}[<style>]{N}` — numbered N-column list with
+    // optional bullet/style argument (e.g. `[+]`, `[\itemCl]`). The optional
+    // `[...]` group is discarded; only the count is used (and we ignore the
+    // count too since HTML doesn't need columns at this fidelity).
     out = out.replace(
-      /\\begin\{enumEX\}\{\d+\}([\s\S]*?)\\end\{enumEX\}/g,
+      /\\begin\{enumEX\}(?:\[[^\]]*\])?\s*\{\d+\}([\s\S]*?)\\end\{enumEX\}/g,
       (_m, inner: string) =>
         `<ol class="kntt-list">${itemsToHtml(inner, '\\item')}</ol>`,
     )
@@ -252,6 +399,72 @@ function guessOlType(opt: string | undefined): string | null {
 }
 
 /**
+ * Brace-counting macro unwrapper. Handles macros where the argument may
+ * contain nested braces (e.g. `\centerline{... \hspace*{1cm} ...}`) which
+ * the naive `\\macro\{[^}]*\}` regex used to drop on the floor.
+ *
+ * Options:
+ *  - `keep`     — `true` replaces the macro with its argument, `false` strips
+ *                 the whole `\macro{...}` invocation.
+ *  - `hasStar`  — if true, optionally consumes a `*` between the macro name
+ *                 and the `{` (covers `\hspace*{1cm}`, `\subsubsection*{...}`).
+ *  - `dropArgs` — if `keep` is true, this many leading argument groups are
+ *                 discarded; the LAST argument is the one kept. Defaults to 0
+ *                 (single-arg unwrap).
+ */
+function unwrapMacro(
+  src: string,
+  macro: string,
+  opts: { keep: boolean; hasStar?: boolean; dropArgs?: number },
+): string {
+  const dropArgs = opts.dropArgs ?? 0
+  let result = ''
+  let i = 0
+  while (i < src.length) {
+    const idx = src.indexOf(macro, i)
+    if (idx === -1) {
+      result += src.slice(i)
+      break
+    }
+    // Make sure this isn't a longer macro like `\centerline` matching `\center`.
+    const after = src[idx + macro.length]
+    if (after && /[a-zA-Z]/.test(after)) {
+      result += src.slice(i, idx + macro.length)
+      i = idx + macro.length
+      continue
+    }
+    let cursor = idx + macro.length
+    if (opts.hasStar && src[cursor] === '*') cursor++
+    while (cursor < src.length && /\s/.test(src[cursor])) cursor++
+    // Read (dropArgs + 1) brace groups, keeping the last one if `keep`.
+    let last: { content: string; end: number } | null = null
+    let consumed = 0
+    let total = dropArgs + 1
+    let ok = true
+    while (consumed < total) {
+      const arg = extractBracedArg(src, cursor)
+      if (!arg) {
+        ok = false
+        break
+      }
+      last = arg
+      cursor = arg.end
+      consumed++
+    }
+    if (!ok || !last) {
+      // Macro had no arg — strip the macro name and stop scanning past it.
+      result += src.slice(i, idx)
+      i = idx + macro.length
+      continue
+    }
+    result += src.slice(i, idx)
+    if (opts.keep) result += last.content
+    i = cursor
+  }
+  return result
+}
+
+/**
  * Extract the content of a single brace-delimited argument starting at
  * `start` (which must point at the opening `{`). Returns the inner content
  * and the index one past the closing `}`, or `null` if braces are unbalanced.
@@ -301,9 +514,9 @@ function stripImmini(src: string): string {
     }
     result += src.slice(i, idx)
 
-    // Skip any whitespace between macro name and first {
+    // Skip any whitespace (including newlines/tabs) between macro name and `{`.
     let j = idx + MACRO.length
-    while (j < src.length && src[j] === ' ') j++
+    while (j < src.length && /\s/.test(src[j])) j++
 
     const arg1 = extractBracedArg(src, j)
     if (!arg1) {

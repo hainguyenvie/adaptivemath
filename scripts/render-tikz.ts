@@ -43,6 +43,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const WEB_ROOT = resolve(__dirname, '..')
 const DEBUG_JSON = join(WEB_ROOT, 'src', 'data', 'questions-debug.json')
+const RUNTIME_JSON = join(WEB_ROOT, 'src', 'data', 'questions.json')
 const SVG_DIR = join(WEB_ROOT, 'public', 'tikz')
 const MANIFEST_PATH = join(WEB_ROOT, 'src', 'data', 'tikz-manifest.json')
 
@@ -108,15 +109,26 @@ const LATEX_TEMPLATE = String.raw`\documentclass[border=2pt,tikz]{standalone}
 \pgfplotsset{compat=1.18}
 \usepackage{tkz-euclide}
 \usepackage{tikz-3dplot}
+% hyperref is needed for the rare \href{...}{...} inside TikZ labels.
+% hidelinks keeps the PDF clean so the SVG export has no border boxes.
+\usepackage[hidelinks]{hyperref}
 \usetikzlibrary{
   math,through,calc,intersections,angles,quotes,
   shapes,shapes.geometric,arrows,arrows.meta,
   patterns,patterns.meta,matrix,chains,
   decorations.text,decorations.pathmorphing,decorations.markings,
-  positioning,backgrounds,fit,shadows,fadings,shadings
+  positioning,backgrounds,fit,shadows,fadings,shadings,
+  trees,babel
 }
 \usepackage{amsmath,amssymb}
-\usepackage{xcolor}
+% xcolor with all the named-color collections so corpus diagrams that use
+% darkpastelgreen / BurntOrange / etc. without an explicit \definecolor
+% compile out-of-the-box.
+\usepackage[svgnames,x11names,dvipsnames]{xcolor}
+% Some corpus diagrams style branches/trunks using bespoke tikz keys. Define
+% them as empty no-ops so the figure compiles even without the original
+% style file from the textbook.
+\tikzset{trunk/.style={},treetop/.style={}}
 \usepackage{fontspec}
 % Use a system font that covers Vietnamese diacritics so TikZ labels like
 % "Phương", "Đỉnh", "Đường" render correctly.
@@ -146,15 +158,34 @@ function collectJobs(): TikzJob[] {
   }
   const bank = JSON.parse(readFileSync(DEBUG_JSON, 'utf8')) as DebugBank
   const byHash = new Map<string, TikzJob>()
+  const visit = (src: string, hash: string | undefined, ownerId: string) => {
+    const h = hash ?? createHash('sha256').update(src).digest('hex').slice(0, 12)
+    if (!byHash.has(h)) {
+      byHash.set(h, { hash: h, source: src, firstQuestionId: ownerId })
+    }
+  }
   for (const q of bank.questions) {
-    q.tikzSources.forEach((src, i) => {
-      const hash =
-        q.tikzHashes?.[i] ??
-        createHash('sha256').update(src).digest('hex').slice(0, 12)
-      if (!byHash.has(hash)) {
-        byHash.set(hash, { hash, source: src, firstQuestionId: q.id })
+    q.tikzSources.forEach((src, i) => visit(src, q.tikzHashes?.[i], q.id))
+  }
+  // Theory blocks live only in the runtime bank — `questions-debug.json` omits
+  // the `theory` field, so without this pass the ~260 figures inside theory
+  // never get rendered (and their pills show "Hình vẽ chưa render được").
+  if (existsSync(RUNTIME_JSON)) {
+    const runtime = JSON.parse(readFileSync(RUNTIME_JSON, 'utf8')) as {
+      theory?: Array<{
+        topicId: string
+        knowledgeBlocks?: Array<{ tikzSources?: string[]; tikzHashes?: string[] }>
+        methodBlocks?: Array<{ tikzSources?: string[]; tikzHashes?: string[] }>
+      }>
+    }
+    for (const tp of runtime.theory ?? []) {
+      const all = [...(tp.knowledgeBlocks ?? []), ...(tp.methodBlocks ?? [])]
+      for (const b of all) {
+        ;(b.tikzSources ?? []).forEach((src, i) =>
+          visit(src, b.tikzHashes?.[i], `theory:${tp.topicId}`),
+        )
       }
-    })
+    }
   }
   return Array.from(byHash.values())
 }
