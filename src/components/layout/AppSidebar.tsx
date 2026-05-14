@@ -5,9 +5,12 @@ import { loadProfile } from '../../lib/storage'
 const NAV_ITEMS = [
   { icon: 'forest', label: 'My Forest', path: '/' },
   { icon: 'auto_graph', label: 'Growth Path', path: '/learning-path' },
-  { icon: 'calendar_month', label: 'Study Calendar', path: '/' },
-  { icon: 'group', label: 'Community', path: '/community' },
   { icon: 'psychology', label: 'Competency Profile', path: '/profile' },
+  { icon: 'hub', label: 'GraphRAG', path: '/graph' },
+  { icon: 'tune', label: 'RLHF Audit', path: '/rlhf' },
+  { icon: 'co_present', label: 'Teacher', path: '/teacher' },
+  { icon: 'family_restroom', label: 'Parent', path: '/parent' },
+  { icon: 'group', label: 'Community', path: '/community' },
 ]
 
 export function AppSidebar() {

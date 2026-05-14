@@ -5,17 +5,23 @@ import { MasteryBandLegend } from '../components/profile/MasteryBandLegend'
 import { ChapterBarList } from '../components/profile/ChapterBarList'
 import { GapList } from '../components/profile/GapList'
 import { ErrorSignalsCard } from '../components/profile/ErrorSignalsCard'
-import { ProfileDebugPanel } from '../components/profile/ProfileDebugPanel'
 import { ProfileSidebar } from '../components/profile/ProfileSidebar'
+import { KnowledgeTree } from '../components/knowledge-tree/KnowledgeTree'
+import { TreeStageLegend } from '../components/knowledge-tree/TreeStageLegend'
+import { TreeNodeDrawer } from '../components/knowledge-tree/TreeNodeDrawer'
 import {
   PathLoadingAnimation,
   LOADING_TOTAL_MS,
 } from '../components/learning-path/PathLoadingAnimation'
 import { loadLastDiagnostic } from '../lib/diagnosticStorage'
 import { loadProfile } from '../lib/storage'
+import { loadLearnerState } from '../lib/learnerStorage'
 import { QUESTION_BANK } from '../lib/questionBank'
 import { TOPICS } from '../data/topics'
 import { buildKnowledgeProfile } from '../lib/profiling'
+import { buildKnowledgeTree } from '../lib/treeStability'
+import { buildKnowledgeGraph } from '../lib/graphRag'
+import { buildTopicNarrative } from '../lib/narrativeGen'
 import { generateLearningPath } from '../lib/pathGenerator'
 import {
   saveLearningPath,
@@ -35,6 +41,7 @@ export function KnowledgeProfilePage() {
   const [flash, setFlash] = useState<string | null>(null)
   const [pathExists, setPathExists] = useState(() => loadLearningPath() !== null)
   const [pathLoading, setPathLoading] = useState(false)
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null)
 
   useEffect(() => {
     const session = loadLastDiagnostic()
@@ -66,6 +73,35 @@ export function KnowledgeProfilePage() {
     return buildKnowledgeProfile(ctx.session, ctx.profile, pool, TOPICS)
   }, [ctx])
 
+  const treeModel = useMemo(
+    () => (knowledge ? buildKnowledgeTree(knowledge, loadLearnerState()) : null),
+    [knowledge],
+  )
+
+  const graph = useMemo(() => {
+    if (!ctx || !knowledge) return null
+    return buildKnowledgeGraph({
+      profile: ctx.profile,
+      knowledge,
+      learner: loadLearnerState(),
+      tree: treeModel,
+    })
+  }, [ctx, knowledge, treeModel])
+
+  const selectedNode = useMemo(() => {
+    if (!selectedTopicId || !treeModel) return null
+    for (const b of treeModel.branches) {
+      const found = b.topics.find((t) => t.topicId === selectedTopicId)
+      if (found) return found
+    }
+    return null
+  }, [selectedTopicId, treeModel])
+
+  const selectedNarrative = useMemo(() => {
+    if (!selectedTopicId || !graph) return null
+    return buildTopicNarrative(graph, selectedTopicId)
+  }, [selectedTopicId, graph])
+
   const handleGeneratePath = useCallback(() => {
     if (!ctx || !knowledge) return
     setPathLoading(true)
@@ -73,7 +109,12 @@ export function KnowledgeProfilePage() {
       const pool = QUESTION_BANK.questions.filter(
         (q) => q.grade === knowledge.grade,
       )
-      const result = generateLearningPath(ctx.profile, knowledge, pool)
+      const result = generateLearningPath(
+        ctx.profile,
+        knowledge,
+        pool,
+        loadLearnerState(),
+      )
       saveLearningPath(result)
       setPathLoading(false)
       navigate('/learning-path')
@@ -181,6 +222,35 @@ export function KnowledgeProfilePage() {
               <StatPill value={`${(knowledge.target * 100).toFixed(0)}%`} label="Mục tiêu" />
               <StatPill value={avgDurLabel} label="Thời gian TB" />
             </div>
+
+            {/* Knowledge tree */}
+            {treeModel && (
+              <section
+                id="profile-tree"
+                className="rounded-[32px] border border-white/65 bg-white/95 p-6 shadow-[0_18px_55px_rgba(0,53,39,0.09)]"
+              >
+                <header className="mb-3 flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[#446900]">
+                      🌳 Cây tri thức
+                    </p>
+                    <h2 className="mt-1 text-xl font-black text-[#003527]">
+                      Cây tri thức của bạn
+                    </h2>
+                    <p className="mt-0.5 text-sm font-medium text-[#446900]">
+                      Click một lá để xem chi tiết chủ đề
+                    </p>
+                  </div>
+                  <TreeStageLegend counts={treeModel.stageCounts} />
+                </header>
+                <KnowledgeTree
+                  model={treeModel}
+                  onSelectTopic={setSelectedTopicId}
+                  selectedTopicId={selectedTopicId}
+                  animate
+                />
+              </section>
+            )}
 
             {/* Radar chart */}
             <div
@@ -293,12 +363,21 @@ export function KnowledgeProfilePage() {
               <ErrorSignalsCard signals={knowledge.signals} />
             </div>
 
-            {/* Debug panel */}
-            <ProfileDebugPanel profile={knowledge} />
-
           </div>
         </main>
       </div>
+
+      {selectedNode && (
+        <TreeNodeDrawer
+          node={selectedNode}
+          narrative={selectedNarrative}
+          onExploreGraph={() => {
+            setSelectedTopicId(null)
+            navigate('/graph')
+          }}
+          onClose={() => setSelectedTopicId(null)}
+        />
+      )}
     </div>
   )
 }

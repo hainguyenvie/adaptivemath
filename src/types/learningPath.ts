@@ -39,6 +39,12 @@ export interface TopicPriority {
   urgency: number
   weakBonus: number
   examDensity: number
+  /**
+   * 1 − stability from `treeStability`. Captures how brittle the topic is:
+   * a topic with high mastery but many recent unresolved errors is fragile
+   * and should be prioritized over a stable topic at the same mastery.
+   */
+  fragility: number
   /** Composite priority score — higher = scheduled earlier. */
   score: number
   /** Estimated minutes to bring this topic to target. */

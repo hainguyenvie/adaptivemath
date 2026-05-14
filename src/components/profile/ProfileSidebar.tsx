@@ -14,6 +14,7 @@ const GOAL_SHORT: Record<Goal, string> = {
 
 const NAV_ITEMS = [
   { id: 'profile-overview', icon: 'bar_chart', label: 'Tổng quan' },
+  { id: 'profile-tree', icon: 'park', label: 'Cây tri thức' },
   { id: 'profile-gaps', icon: 'target', label: 'Điểm yếu' },
   { id: 'profile-chapters', icon: 'menu_book', label: 'Chi tiết chủ đề' },
   { id: 'profile-signals', icon: 'bolt', label: 'Tín hiệu lỗi' },

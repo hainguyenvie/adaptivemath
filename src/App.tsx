@@ -31,6 +31,18 @@ const ErrorJournalPage = lazy(() =>
 const CommunityPage = lazy(() =>
   import('./pages/CommunityPage').then((m) => ({ default: m.CommunityPage })),
 )
+const GraphExplorerPage = lazy(() =>
+  import('./pages/GraphExplorerPage').then((m) => ({ default: m.GraphExplorerPage })),
+)
+const TeacherDashboardPage = lazy(() =>
+  import('./pages/TeacherDashboardPage').then((m) => ({ default: m.TeacherDashboardPage })),
+)
+const ParentDashboardPage = lazy(() =>
+  import('./pages/ParentDashboardPage').then((m) => ({ default: m.ParentDashboardPage })),
+)
+const RlhfAuditPage = lazy(() =>
+  import('./pages/RlhfAuditPage').then((m) => ({ default: m.RlhfAuditPage })),
+)
 const DebugQuestionsPage = lazy(() =>
   import('./pages/DebugQuestionsPage').then((m) => ({ default: m.DebugQuestionsPage })),
 )
@@ -66,6 +78,10 @@ export default function App() {
           <Route path="/practice" element={<PracticeSessionPage />} />
           <Route path="/errors" element={<ErrorJournalPage />} />
           <Route path="/community" element={<CommunityPage />} />
+          <Route path="/graph" element={<GraphExplorerPage />} />
+          <Route path="/teacher" element={<TeacherDashboardPage />} />
+          <Route path="/parent" element={<ParentDashboardPage />} />
+          <Route path="/rlhf" element={<RlhfAuditPage />} />
           <Route path="/debug/questions" element={<DebugQuestionsPage />} />
           {/* Legacy routes → redirect */}
           <Route path="/diagnostic/result" element={<Navigate to="/profile" replace />} />

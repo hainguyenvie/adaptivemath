@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { PathRoadmap } from '../components/learning-path/PathRoadmap'
 import { loadLearnerState } from '../lib/learnerStorage'
 import { SprintCard } from '../components/learning-path/SprintCard'
-import { PathDebugPanel } from '../components/learning-path/PathDebugPanel'
 import { clearLearningPath, loadLearningPath } from '../lib/pathStorage'
 import { GOAL_OPTIONS, GRADE_LABELS } from '../types/user'
 import { cn } from '../lib/cn'
@@ -157,7 +156,8 @@ export function LearningPathPage() {
                 'Mỗi chủ đề bắt đầu bằng đọc lý thuyết + xem ví dụ mẫu có lời giải.',
                 'Sau đó luyện tập với câu hỏi ở các mức N → H → V theo thứ tự từ dễ đến khó.',
                 'Cứ 3 ngày học → 1 ngày ôn (3 câu/chủ đề), mỗi ngày tối đa 2 chủ đề mới.',
-                'Ưu tiên = gap × 0.40 + urgency × 0.25 + tự nhận yếu × 0.20 + mật độ đề thi × 0.15.',
+                'Ưu tiên cơ sở = gap·0.30 + urgency·0.20 + fragility·0.20 + đề thi·0.15 + tự yếu·0.15.',
+                'Sau đó RLHF tái xếp hạng theo R = 0.35·R_HT + 0.25·R_GV + 0.15·R_PH + 0.15·R_HS + 0.10·R_BB (gần kỳ thi → trọng số GV tăng).',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#b2f746]/30">
@@ -189,8 +189,6 @@ export function LearningPathPage() {
               🔄 Tạo lại lộ trình
             </button>
           </div>
-
-          <PathDebugPanel path={path} />
 
           <footer className="flex justify-center pt-4 pb-8 opacity-45">
             <div className="flex items-center gap-2">

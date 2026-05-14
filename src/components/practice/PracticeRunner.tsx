@@ -28,6 +28,9 @@ import { saveLearnerState } from '../../lib/learnerStorage'
 import { serializeAnswer, serializeCorrectAnswer } from '../../lib/practiceSelector'
 import type { PracticeSelection } from '../../lib/practiceSelector'
 import { getTopicById } from '../../data/topics'
+import { appendFeedback, makeFeedbackId } from '../../lib/rlhf/feedbackStore'
+import { systemRatingFromSession } from '../../lib/rlhf/rewardModel'
+import { SelfRatingModal } from '../rlhf/SelfRatingModal'
 
 interface PracticeRunnerProps {
   topicId: string
@@ -87,6 +90,9 @@ export function PracticeRunner({
     xpEarned: number
     newBadges: string[]
   } | null>(null)
+
+  // RLHF — show self-rating modal once the result phase is reached.
+  const [showSelfRating, setShowSelfRating] = useState(false)
 
   // Current question list based on phase.
   const currentQuestions: Question[] =
@@ -344,7 +350,39 @@ export function PracticeRunner({
       newBadges,
     })
     setPhase('result')
-  }, [practiceResponses, assessResponses, learner, topicId, sessionStartedAt])
+
+    // ---- RLHF: emit system feedback + prompt self-rating ----
+    const masteryDelta = bktState.pL - masteryBefore
+    const { rating: sysRating, confidence: sysConf } = systemRatingFromSession({
+      accuracy,
+      masteryDelta,
+      questionCount: allResponses.length,
+    })
+    const sysTimestamp = new Date().toISOString()
+    appendFeedback({
+      id: makeFeedbackId({
+        source: 'system',
+        kind: 'session_outcome',
+        topicId,
+        activityId: activityId ?? undefined,
+        timestamp: sysTimestamp,
+      }),
+      source: 'system',
+      kind: 'session_outcome',
+      topicId,
+      activityId: activityId ?? undefined,
+      rating: sysRating,
+      confidence: sysConf,
+      timestamp: sysTimestamp,
+      authorId: 'system',
+      authorName: 'AdaptiveMath',
+      note: `accuracy=${(accuracy * 100).toFixed(0)}%, Δmastery=${(masteryDelta * 100).toFixed(1)}%`,
+      metadata: { accuracy, masteryDelta, questionCount: allResponses.length },
+    })
+
+    // Only prompt for self-rating when the student actually engaged.
+    if (allResponses.length >= 3) setShowSelfRating(true)
+  }, [practiceResponses, assessResponses, learner, topicId, sessionStartedAt, activityId, adaptiveEvents])
 
   // Skip empty phases via effects — never setState inside render.
   useEffect(() => {
@@ -367,18 +405,28 @@ export function PracticeRunner({
   if (phase === 'result' && resultData) {
     const allResponses = [...practiceResponses, ...assessResponses]
     return (
-      <PracticeResult
-        topicTitle={topicTitle}
-        questionsAttempted={allResponses.length}
-        correctCount={allResponses.filter((r) => r.correct).length}
-        masteryBefore={resultData.masteryBefore}
-        masteryAfter={resultData.masteryAfter}
-        xpEarned={resultData.xpEarned}
-        newBadges={resultData.newBadges}
-        durationMs={Date.now() - sessionStartedAt}
-        onBackToHome={() => navigate('/')}
-        onPracticeAgain={() => window.location.reload()}
-      />
+      <>
+        <PracticeResult
+          topicTitle={topicTitle}
+          questionsAttempted={allResponses.length}
+          correctCount={allResponses.filter((r) => r.correct).length}
+          masteryBefore={resultData.masteryBefore}
+          masteryAfter={resultData.masteryAfter}
+          xpEarned={resultData.xpEarned}
+          newBadges={resultData.newBadges}
+          durationMs={Date.now() - sessionStartedAt}
+          onBackToHome={() => navigate('/')}
+          onPracticeAgain={() => window.location.reload()}
+        />
+        {showSelfRating && (
+          <SelfRatingModal
+            topicId={topicId}
+            topicTitle={topicTitle}
+            activityId={activityId ?? undefined}
+            onClose={() => setShowSelfRating(false)}
+          />
+        )}
+      </>
     )
   }
 

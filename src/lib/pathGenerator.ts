@@ -28,8 +28,10 @@ import type {
   TopicPriority,
 } from '../types/learningPath'
 import type { LevelLetter } from '../types/question'
+import type { LearnerState } from '../types/learner'
 import { TOPICS } from '../data/topics'
 import { QUESTION_BANK } from './questionBank'
+import { computeStability } from './treeStability'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -44,10 +46,11 @@ const PRACTICE_MINUTES = 15
 const MAX_DAYS = 90
 
 const PRIORITY_WEIGHTS = {
-  gap: 0.40,
-  urgency: 0.25,
-  weak: 0.20,
+  gap: 0.30,
+  urgency: 0.20,
+  fragility: 0.20,
   exam: 0.15,
+  weak: 0.15,
 }
 
 function todayVN(): Date {
@@ -87,9 +90,10 @@ export function generateLearningPath(
   profile: UserProfile,
   knowledge: KnowledgeProfile,
   pool: Question[],
+  learner: LearnerState,
 ): LearningPath {
   const startDate = todayVN()
-  const priorityList = buildPriorityList(profile, knowledge, pool)
+  const priorityList = buildPriorityList(profile, knowledge, pool, learner)
   stabilitySort(priorityList)
 
   // Generate all session slots for every gap topic.
@@ -126,6 +130,7 @@ function buildPriorityList(
   profile: UserProfile,
   knowledge: KnowledgeProfile,
   pool: Question[],
+  learner: LearnerState,
 ): TopicPriority[] {
   const weakSet = new Set(profile.weakTopicIds)
   const examCountByTopic = new Map<string, number>()
@@ -138,6 +143,14 @@ function buildPriorityList(
   }
   const urgency = computeUrgency(profile.deadline)
 
+  const errorsByTopic = new Map<string, typeof learner.errors>()
+  for (const e of learner.errors) {
+    const bucket = errorsByTopic.get(e.topicId) ?? []
+    bucket.push(e)
+    errorsByTopic.set(e.topicId, bucket)
+  }
+  const currentStreak = learner.gamification.currentStreak
+
   const list: TopicPriority[] = []
   for (const gap of knowledge.gaps) {
     const tm = knowledge.topics.find((t) => t.topicId === gap.topicId)
@@ -146,11 +159,22 @@ function buildPriorityList(
     const examSourced = examCountByTopic.get(gap.topicId) ?? 0
     const examDensity = examSourced / examTotal
     const weakBonus = weakSet.has(gap.topicId) ? 1.0 : 0.0
+
+    const { stability } = computeStability(
+      tm,
+      learner.bkt[gap.topicId],
+      learner.srs[gap.topicId],
+      errorsByTopic.get(gap.topicId) ?? [],
+      currentStreak,
+    )
+    const fragility = Math.max(0, Math.min(1, 1 - stability))
+
     const score =
       PRIORITY_WEIGHTS.gap * gap.gap +
       PRIORITY_WEIGHTS.urgency * urgency +
-      PRIORITY_WEIGHTS.weak * weakBonus +
-      PRIORITY_WEIGHTS.exam * examDensity
+      PRIORITY_WEIGHTS.fragility * fragility +
+      PRIORITY_WEIGHTS.exam * examDensity +
+      PRIORITY_WEIGHTS.weak * weakBonus
 
     const gapLevels = computeGapLevels(tm, knowledge.target)
     // Time = theory + one session per gap level.
@@ -164,6 +188,7 @@ function buildPriorityList(
       urgency,
       weakBonus,
       examDensity,
+      fragility,
       score,
       estimatedMinutes: estMinutes,
       gapLevels,

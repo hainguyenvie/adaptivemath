@@ -5,9 +5,17 @@ import { AppSidebar } from '../components/layout/AppSidebar'
 import { clearLastDiagnostic, loadLastDiagnostic } from '../lib/diagnosticStorage'
 import { clearLearnerState, loadLearnerState } from '../lib/learnerStorage'
 import { clearLearningPath } from '../lib/pathStorage'
+import { clearAllFeedback } from '../lib/rlhf/feedbackStore'
+import { clearSeedFlag } from '../lib/rlhf/seedBootstrap'
 import { getPracticeDatesThisMonth } from '../lib/todayActivities'
 import { GOAL_OPTIONS } from '../types/user'
 import { cn } from '../lib/cn'
+import { MiniKnowledgeTree } from '../components/knowledge-tree/MiniKnowledgeTree'
+import { QUESTION_BANK } from '../lib/questionBank'
+import { TOPICS } from '../data/topics'
+import { buildKnowledgeProfile } from '../lib/profiling'
+import { buildKnowledgeTree } from '../lib/treeStability'
+import { ensureRlhfSeed } from '../lib/rlhf/seedBootstrap'
 
 const HERO_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAMVtvNlLuDtOkcZO_SapXSNjKkBUpd7W5yCscHJqQi7CqcpIlHy28zR8gf2r1GEiYY82MiXewUHkdlOnrao5WtonU8cNyxyAw_CUwlvILQ_gBxKgR0OcEvQshgnxJS3Y-PsCAKJJNIV-Q2EmpJ1sPniHRTIvzidXf-U_-xiHV7eInjJ522EJCUySinxlkim0ZCm_Oxu7SboiEfpgLRMrhmrIF0PbCW7ysy-AOJH_YQNVxFUJgjXuRgXAX6Pqb-aIwLRS2DZANpaD8'
@@ -34,12 +42,24 @@ export function HomePage() {
   const learner = loadLearnerState()
   const practiceDates = getPracticeDatesThisMonth(learner)
 
+  // Bootstrap RLHF seed once we know the student's grade.
+  if (profile) ensureRlhfSeed(profile.grade)
+
   const hasProfile = profile !== null
   const goalLabel = profile
     ? GOAL_OPTIONS.find((goal) => goal.value === profile.goal)?.label ??
       profile.goal
     : null
   const hasDiagnostic = hasProfile && diagnostic !== null
+
+  const treeModel = (() => {
+    if (!profile || !diagnostic) return null
+    const pool = QUESTION_BANK.questions.filter(
+      (q) => q.grade === diagnostic.grade,
+    )
+    const knowledge = buildKnowledgeProfile(diagnostic, profile, pool, TOPICS)
+    return buildKnowledgeTree(knowledge, learner)
+  })()
   const primaryPath = !hasProfile
     ? '/onboarding'
     : hasDiagnostic
@@ -103,6 +123,19 @@ export function HomePage() {
             <DashboardCalendar practiceDates={practiceDates} />
 
             <div className="space-y-8">
+              {treeModel ? (
+                <MiniKnowledgeTree
+                  model={treeModel}
+                  onClick={() => navigate('/profile#profile-tree')}
+                />
+              ) : (
+                <TreeSeedPlaceholder
+                  hasProfile={hasProfile}
+                  onClick={() =>
+                    navigate(hasProfile ? '/diagnostic' : '/onboarding')
+                  }
+                />
+              )}
               <CommunityCard
                 grade={profile?.grade}
                 onClick={() => navigate('/community')}
@@ -195,6 +228,8 @@ function clearAllLocalLearningData(): void {
   clearLastDiagnostic()
   clearLearnerState()
   clearLearningPath()
+  clearAllFeedback()
+  clearSeedFlag()
 
   for (const storage of [window.localStorage, window.sessionStorage]) {
     for (let index = storage.length - 1; index >= 0; index -= 1) {
@@ -418,6 +453,41 @@ function CommunityCard({
           +42
         </div>
       </div>
+    </button>
+  )
+}
+
+function TreeSeedPlaceholder({
+  hasProfile,
+  onClick,
+}: {
+  hasProfile: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full flex-col items-start gap-2 rounded-[2rem] border border-dashed border-emerald-300 bg-white/55 p-6 text-left transition hover:bg-white/75"
+    >
+      <span className="text-3xl" aria-hidden>
+        🌱
+      </span>
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2b6954]">
+        Cây tri thức
+      </p>
+      <p className="text-lg font-extrabold text-[#003527]">
+        Hạt giống đang chờ
+      </p>
+      <p className="text-sm font-medium text-[#404944]">
+        {hasProfile
+          ? 'Hoàn thành bài chẩn đoán để cây tri thức nảy mầm.'
+          : 'Nhập hồ sơ học tập và làm bài chẩn đoán để gieo hạt cho cây tri thức của bạn.'}
+      </p>
+      <span className="mt-2 inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-[#446900]">
+        {hasProfile ? 'Làm chẩn đoán' : 'Bắt đầu'}
+        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+      </span>
     </button>
   )
 }

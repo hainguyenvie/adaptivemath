@@ -10,7 +10,6 @@ import { Timer } from '../components/diagnostic/Timer'
 import { McqQuestion } from '../components/diagnostic/McqQuestion'
 import { TfQuestion } from '../components/diagnostic/TfQuestion'
 import { ShortAnsQuestion } from '../components/diagnostic/ShortAnsQuestion'
-import { DebugPanel } from '../components/diagnostic/DebugPanel'
 import {
   DiagnosticIcon,
   type DiagnosticIconName,
@@ -288,11 +287,6 @@ function QuestionScreen({
               </Button>
             </div>
 
-            <DebugPanel
-              session={session}
-              currentQuestion={question}
-              topicTitleById={topicTitleById}
-            />
           </div>
         </div>
       </main>
